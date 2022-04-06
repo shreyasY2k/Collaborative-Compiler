@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <link rel="stylesheet" data-name="vs/editor/editor.main" href="/package/min/vs/editor/editor.main.css" />
+</head>
+
+<body>
+    <%= userid%>
+        <h2>Monaco Editor Sync Loading Sample</h2>
+        <div id="container" style="width: 800px; height: 600px; border: 1px solid grey"></div>
+        <%files.map( file => {%>
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <a style="cursor: pointer;" onclick="loadEditorText()">
+                        <%= file%>
+                    </a>
+                </div>
+            </div>
+            <%})%>
+                <script>
+                    var require = {
+                        paths: {
+                            vs: "/package/min/vs"
+                        }
+                    };
+                </script>
+                <script src="/package/min/vs/loader.js"></script>
+                <script src="/package/min/vs/editor/editor.main.nls.js"></script>
+                <script src="/package/min/vs/editor/editor.main.js"></script>
+
+                <script>
+                    var editor = monaco.editor.create(document.getElementById("container"), {
+                        value: ["function x() {", '\tconsole.log("Hello world!");', "}"].join(
+                            "\n"
+                        ),
+                        language: "javascript",
+                        theme: "vs-dark"
+                    });
+
+                    //function to load editor text when clicked on a file
+                    function loadEditorText() {
+                        var xhttp = new XMLHttpRequest();
+                        xhttp.onreadystatechange = function() {
+                            if (this.readyState == 4 && this.status == 200) {
+                                editor.setValue(this.responseText);
+                            }
+                        };
+                        xhttp.open("GET", "/user/project/getfile?projectname=<%= projectname%>&filename=<%= files%>", true);
+                        xhttp.send();
+                    }
+                </script>
+</body>
+
+</html>

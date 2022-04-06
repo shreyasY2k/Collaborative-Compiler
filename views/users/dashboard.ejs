@@ -1,0 +1,74 @@
+<div class="container">
+
+    <div class="page-header text-center">
+        <h1><span class="fa fa-anchor"></span> Profile Page</h1>
+        <form action="/user/logout" method="post">
+            <button type="submit" class="btn btn-danger btn-lg">Logout</button>
+        </form>
+    </div>
+
+    <div class="row">
+
+        <!-- LOCAL INFORMATION -->
+        <div class="col-sm-6">
+            <div class="well">
+                <h3><span class="fa fa-user"></span> Local</h3>
+
+                <p>
+                    <strong>Welcome</strong>:
+                    <%= name %><br>
+                </p>
+
+            </div>
+
+            <%files.map( file => {%>
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="overlay">
+                            <a href="/user/project/open?projectname=<%= file %>" class="btn btn-lg btn-success">Open</a>
+                            <a href="/user/project/download?projectname=<%= file %>" class="btn btn-lg btn-primary">Download</a>
+                            <a href="/user/project/delete?projectname=<%= file %>" class="btn btn-lg btn-danger">Delete</a>
+                        </div>
+                        <h3>
+                            <%= file%>
+                        </h3>
+                    </div>
+                </div>
+                <%})%>
+
+
+
+
+        </div>
+        <div class="col-2">
+            <div class="container">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createProject">
+  Create a Project
+</button>
+                <button type="button" class="btn btn-primary">
+  Join a Collaboration Session
+</button>
+            </div>
+        </div>
+
+    </div>
+    <div class="modal fade" id="createProject" role="dialog" aria-labelledby="createProject" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="exampleModalLongTitle">Create Project</h2>
+                </div>
+                <div class="modal-body">
+                    <form action="/user/project/create" method="post">
+                        <input type="text" class="form-control" id="projectName" name="projectName" placeholder="Project Name">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
