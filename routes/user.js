@@ -10,9 +10,6 @@ const flash = require("express-flash");
 const session = require("express-session");
 const initializePassport = require("../passport-config");
 const fs = require("fs");
-const zl = require("zip-lib");
-const archiver = require("archiver");
-const JSZip = require("jszip");
 const path = require("path");
 const AWS = require("aws-sdk");
 AWS.config.update({
@@ -48,9 +45,15 @@ router.get("/register", checkNotAuthenticated, (req, res) => {
 
 router.get("/dashboard", checkAuthenticated, (req, res) => {
   const userId = req.user._id;
-  fs.mkdirSync(path.join(__dirname, "../", userId.toString()),{recursive:true});
+  fs.mkdirSync(path.join(__dirname, "../", userId.toString()), {
+    recursive: true
+  });
   s3.listObjectsV2(
-    { Bucket: "sahapaathi", Prefix: userId.toString() + "/", Delimiter: "/" },
+    {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Prefix: userId.toString() + "/",
+      Delimiter: "/"
+    },
     function (err, data) {
       if (err) {
         console.log(err, err.stack); // an error occurred
@@ -62,10 +65,12 @@ router.get("/dashboard", checkAuthenticated, (req, res) => {
         // console.log(folders);
         //for each folder create a folder locally inside user folder and add their files to it
         folders.forEach(function (folder) {
-          fs.mkdirSync(path.join(__dirname, "../", userId.toString(), folder),{recursive:true});
+          fs.mkdirSync(path.join(__dirname, "../", userId.toString(), folder), {
+            recursive: true
+          });
           s3.listObjectsV2(
             {
-              Bucket: "sahapaathi",
+              Bucket: process.env.AWS_S3_BUCKET_NAME,
               Prefix: userId.toString() + "/" + folder + "/",
               Delimiter: "/"
             },
@@ -73,42 +78,42 @@ router.get("/dashboard", checkAuthenticated, (req, res) => {
               if (err) {
                 console.log(err, err.stack); // an error occurred
               } else {
-                //list only files inside the folder
                 var files = data.Contents.map(function (item) {
                   return item.Key;
                 });
-                console.log(files);
-                //for each file download it and save it locally
-                files.forEach(function (file) {
+                for (var i = 1; i < files.length; i++) {
+                  fileName = files[i].split("/")[2];
                   s3.getObject(
-                    { Bucket: "sahapaathi", Key: file },
+                    {
+                      Bucket: process.env.AWS_S3_BUCKET_NAME,
+                      Key: files[i]
+                    },
                     function (err, data) {
                       if (err) {
                         console.log(err, err.stack); // an error occurred
                       } else {
-                        // console.log(data);
-                        // console.log(file);
                         fs.writeFileSync(
                           path.join(
                             __dirname,
                             "../",
                             userId.toString(),
-                            folder+"/",
-                            file.split("/")[2]
+                            folder,
+                            fileName
                           ),
                           data.Body
                         );
                       }
                     }
                   );
-                });
+                }
               }
             }
           );
         });
-        // console.log(folders,2);
+         const userFolder = path.join(__dirname, "../", userId.toString());
+         const userFolderList = fs.readdirSync(userFolder);
         res.render("users/dashboard", {
-          files: folders,
+          files: userFolderList,
           name: req.user.name
         });
       }
@@ -117,6 +122,37 @@ router.get("/dashboard", checkAuthenticated, (req, res) => {
 });
 
 router.post("/logout", (req, res) => {
+  //upload user folder to s3 sync
+  // const userId = req.user._id;
+  // const userFolder = path.join(__dirname, "../", userId.toString());
+  // const userFolderList = fs.readdirSync(userFolder);
+  // userFolderList.forEach(function (folder) {
+  //   const folderPath = path.join(__dirname, "../", userId.toString(), folder);
+  //   const folderList = fs.readdirSync(folderPath);
+  //   folderList.forEach(function (file) {
+  //     const filePath = path.join(
+  //       __dirname,
+  //       "../",
+  //       userId.toString(),
+  //       folder,
+  //       file
+  //     );
+  //     const fileStream = fs.createReadStream(filePath);
+  //     const fileName = filePath.split("/")[3];
+  //     const params = {
+  //       Bucket: process.env.AWS_S3_BUCKET_NAME,
+  //       Key: userId.toString() + "/" + folder + "/" + fileName,
+  //       Body: fileStream
+  //     };
+  //     s3.upload(params, function (err, data) {
+  //       if (err) {
+  //         console.log(err, err.stack); // an error occurred
+  //       } else {
+  //         console.log(data); // successful response
+  //       }
+  //     });
+  //   });
+  // });
   req.logOut();
   res.redirect("/");
 });
@@ -154,7 +190,7 @@ router.post("/register", checkNotAuthenticated, (req, res) => {
             } else {
               s3.putObject(
                 {
-                  Bucket: "sahapaathi",
+                  Bucket: process.env.AWS_S3_BUCKET_NAME,
                   Key: user._id.toString() + "/",
                   Body: ""
                 },
@@ -182,6 +218,9 @@ router.post(
     failureFlash: true
   })
 );
+
+//on user logout or session timeout upload user folder to s3
+
 
 function checkAuthenticated(req, res, next) {
   if (req.isAuthenticated()) {

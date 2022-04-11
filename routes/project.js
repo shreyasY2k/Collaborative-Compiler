@@ -65,15 +65,28 @@ router.post("/project/create", checkAuthenticated, (req, res) => {
   //create folder for project inside user folder
   const userid = req.user._id;
   const projectname = req.body.projectName;
-  fs.mkdirSync(path.join(__dirname,"../", userid.toString() + "/" + projectname),{recursive:true});
-      res.redirect("/user/dashboard");
+  fs.mkdirSync(
+    path.join(__dirname, "../", userid.toString() + "/" + projectname),
+    { recursive: true }
+  );
+  //get list of folders inside user folder local
+  const userFolder = path.join(__dirname, "../", userid.toString());
+  const userFolderList = fs.readdirSync(userFolder);
+  console.log(userFolderList);
+  res.render("users/dashboard", {
+    files: userFolderList,
+    name: req.user.name
+  });
 });
 
 router.get("/project/delete", checkAuthenticated, async (req, res) => {
   const userid = req.user._id;
   const projectname = req.query.projectname;
-  fs.rmdirSync(path.join(__dirname,"../", userid.toString() + "/" + projectname));
-  await deleteProject("sahapaathi", userid.toString() + "/" + projectname);
+  fs.rmSync(
+    path.join(__dirname, "../", userid.toString() + "/" + projectname),
+    { recursive: true }
+  );
+  await deleteProject(process.env.AWS_S3_BUCKET_NAME, userid.toString() + "/" + projectname);
   res.redirect("/user/dashboard");
 });
 
@@ -81,74 +94,46 @@ router.get("/project/download", checkAuthenticated, (req, res) => {
   const userid = req.user._id;
   const projectname = req.query.projectname;
   zl.archiveFolder(
-    path.join(__dirname,"../",userid.toString(),projectname.toString()),path.join(__dirname,"../",userid.toString(),projectname.toString()+".zip")).then(()=>{
-      res.download(path.join(__dirname,"../",userid.toString(),projectname.toString()+".zip"));
-    }
+    path.join(__dirname, "../", userid.toString(), projectname.toString()),
+    path.join(
+      __dirname,
+      "../",
+      userid.toString(),
+      projectname.toString() + ".zip"
     )
+  ).then(() => {
+    res.download(
+      path.join(
+        __dirname,
+        "../",
+        userid.toString(),
+        projectname.toString() + ".zip"
+      )
+    );
   });
+});
 
-router.get("/project/open", checkAuthenticated,async(req, res) => {
+router.get("/project/open", checkAuthenticated, async (req, res) => {
   const userid = req.user._id;
   const projectname = req.query.projectname;
-  var fileList=  fs.readdirSync(path.join(__dirname,"../", userid + "/" + projectname),{withFileTypes:true}).filter(item=>!item.isDirectory()).map(item=>item.name)
+  var fileList = fs
+    .readdirSync(path.join(__dirname, "../", userid + "/" + projectname), {
+      withFileTypes: true
+    })
+    .filter(item => !item.isDirectory())
+    .map(item => item.name);
 
-// fs.mkdirSync(path.join(__dirname, "../", userid.toString(), projectname), {
-//   recursive: true
-// });
-//   const s3 = new AWS.S3();
-
-// const params = {
-//   Bucket: "sahapaathi",
-//   Delimiter: "/",
-//   Prefix: userid.toString() + "/" + projectname + "/"
-// };
-
-// const data = await s3.listObjects(params).promise().then(data => {
-//   return data;
-// }).catch(err => {
-//   console.log(err);
-// });
-
-
-// for (let index = 1; index < data["Contents"].length; index++) {
-//   const params = {
-//     Bucket: "sahapaathi",
-//     Key: data["Contents"][index]["Key"]
-//   };
-//   const data2 = await s3.getObject(params).promise();
-//   fs.writeFileSync(
-//     path.join(
-//       __dirname,"../" ,data["Contents"][index]["Key"]),
-//     data2["Body"],
-//   );
-// }
-//   fs.readdir(
-//     path.join(__dirname, "../", userid.toString(), projectname),
-//     (err, files) => {
-//       if (err) {
-//         console.log(err);
-//       } else {
-//         res.render("project/editor", {
-//           files: files,
-//           projectname: projectname,
-//           userid: userid
-//         });
-//       }
-//     }
-//   );
-res.render("project/editor", {
-  files: fileList,
-  projectname: projectname,
-  userid: userid
-
-});
+  res.render("project/editor", {
+    files: fileList,
+    projectname: projectname,
+    userid: userid
+  });
 });
 
 router.get("/project/getfile*", checkAuthenticated, (req, res) => {
   const userid = req.user._id;
   const projectname = req.query.projectname;
   const file = req.query.filename;
-//send the file content form local file system
   fs.readFile(
     path.join(__dirname, "../", userid.toString(), projectname, file),
     (err, data) => {
@@ -159,8 +144,6 @@ router.get("/project/getfile*", checkAuthenticated, (req, res) => {
       }
     }
   );
-})
-
-
+});
 
 module.exports = router;
