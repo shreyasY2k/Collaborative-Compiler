@@ -48,6 +48,7 @@ router.get("/register", checkNotAuthenticated, (req, res) => {
 
 router.get("/dashboard", checkAuthenticated, (req, res) => {
   const userId = req.user._id;
+  fs.mkdirSync(path.join(__dirname, "../", userId.toString()),{recursive:true});
   s3.listObjectsV2(
     { Bucket: "sahapaathi", Prefix: userId.toString() + "/", Delimiter: "/" },
     function (err, data) {
@@ -57,6 +58,53 @@ router.get("/dashboard", checkAuthenticated, (req, res) => {
         //list only folders inside the user folder
         var folders = data.CommonPrefixes.map(function (item) {
           return item.Prefix.split("/")[1];
+        });
+        // console.log(folders);
+        //for each folder create a folder locally inside user folder and add their files to it
+        folders.forEach(function (folder) {
+          fs.mkdirSync(path.join(__dirname, "../", userId.toString(), folder),{recursive:true});
+          s3.listObjectsV2(
+            {
+              Bucket: "sahapaathi",
+              Prefix: userId.toString() + "/" + folder + "/",
+              Delimiter: "/"
+            },
+            function (err, data) {
+              if (err) {
+                console.log(err, err.stack); // an error occurred
+              } else {
+                //list only files inside the folder
+                var files = data.Contents.map(function (item) {
+                  return item.Key;
+                });
+                console.log(files);
+                //for each file download it and save it locally
+                files.forEach(function (file) {
+                  s3.getObject(
+                    { Bucket: "sahapaathi", Key: file },
+                    function (err, data) {
+                      if (err) {
+                        console.log(err, err.stack); // an error occurred
+                      } else {
+                        // console.log(data);
+                        // console.log(file);
+                        fs.writeFileSync(
+                          path.join(
+                            __dirname,
+                            "../",
+                            userId.toString(),
+                            folder+"/",
+                            file.split("/")[2]
+                          ),
+                          data.Body
+                        );
+                      }
+                    }
+                  );
+                });
+              }
+            }
+          );
         });
         // console.log(folders,2);
         res.render("users/dashboard", {
@@ -148,7 +196,5 @@ function checkNotAuthenticated(req, res, next) {
   }
   next();
 }
-
-
 
 module.exports = router;
