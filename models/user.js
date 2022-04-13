@@ -6,7 +6,6 @@ const userSchema = new mongoose.Schema({
   email: String,
   password: String
 });
-//create a model for user
+userSchema.index({ email: 1 }, { unique: true });
 const User = mongoose.model("User", userSchema);
-//export the model
 module.exports = User;
