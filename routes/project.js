@@ -126,11 +126,10 @@ router.get("/project/open", checkAuthenticated, async (req, res) => {
   res.render("project/editor", {
     files: fileList,
     projectname: projectname,
-    userid: userid
   });
 });
 
-router.get("/project/getfile*", checkAuthenticated, (req, res) => {
+router.get("/project/getFile*", checkAuthenticated, (req, res) => {
   const userid = req.user._id;
   const projectname = req.query.projectname;
   const file = req.query.filename;
@@ -145,5 +144,58 @@ router.get("/project/getfile*", checkAuthenticated, (req, res) => {
     }
   );
 });
+
+router.get("/project/addFile*", checkAuthenticated, (req, res) => {
+  const userid = req.user._id;
+  const projectname = req.query.projectname;
+  const file = req.query.filename;
+  fs.writeFile(
+    path.join(__dirname, "../", userid.toString(), projectname, file),
+    "",
+    err => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.send("File created");
+      }
+    }
+  );
+});
+
+router.get("/project/updateFile*", checkAuthenticated, (req, res) => {
+  const userid = req.user._id;
+  const projectname = req.query.projectname;
+  const file = req.query.newfilename;
+  const oldfilename = req.query.oldfilename;
+  fs.rename(
+    path.join(__dirname, "../", userid.toString(), projectname, oldfilename),
+    path.join(__dirname, "../", userid.toString(), projectname, file),
+    err => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log("File renamed");
+        res.send("File updated");
+      }
+    }
+  );
+});
+
+router.get("/project/deleteFile*", checkAuthenticated, (req, res) => {
+  const userid = req.user._id;
+  const projectname = req.query.projectname;
+  const file = req.query.filename;
+  fs.unlink(
+    path.join(__dirname, "../", userid.toString(), projectname, file),
+    err => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.send("File deleted");
+      }
+    }
+  );
+});
+
 
 module.exports = router;
