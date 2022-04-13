@@ -1,51 +1,66 @@
-<head>
-    <title>Login</title>
-</head>
-<section>
-    <div class="container">
-        <div class="user signinBx">
-            <div class="imgBx"><img src="login.jpg" alt="" /></div>
-            <div class="formBx">
-                <!--  pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?!.*\s).{6,}" -->
-                <form action="/user/login" method="post">
-                    <h2>Login</h2>
-                    <% if (messages.error) { %>
-                        <p class="alert alert-danger">
-                            <%= messages.error %>
-                        </p>
-                        <% } %>
+<!DOCTYPE html>
+<html lang="en">
 
-                            <input type="text" name="email" placeholder="Email" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" />
-                            <input type="password" name="password" placeholder="Password" />
-                            <input type="submit" name="login" value="Login" />
-                            <p class="signup">
-                                Don't have an account ?
-                                <a a href="#" onclick="toggleForm();">Register.</a>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="/styles.css">
+
+</head>
+
+<body>
+    <section>
+        <div class="container">
+            <div class="user signinBx">
+                <div class="imgBx"><img src="login.jpg" alt="" /></div>
+                <div class="formBx">
+                    <!--  pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?!.*\s).{6,}" -->
+                    <form action="/user/login" method="post">
+                        <h2>Login</h2>
+                        <% if (messages.error) { %>
+                            <p class="alert alert-danger">
+                                <%= messages.error %>
                             </p>
-                </form>
+                            <% } %>
+
+                                <input type="text" name="email" placeholder="Email" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" />
+                                <input type="password" name="password" placeholder="Password" />
+                                <input type="submit" name="login" value="Login" />
+                                <p class="signup">
+                                    Don't have an account ?
+                                    <a a href="#" onclick="toggleForm();">Register.</a>
+                                </p>
+                    </form>
+                </div>
+            </div>
+            <div class="user signupBx">
+                <div class="formBx">
+                    <form action="/user/register" method="post">
+                        <h2>Create an account</h2>
+                        <input type="text" name="name" placeholder="Name" required pattern="[a-zA-Z ]+" />
+                        <input type="email" name="email" placeholder="Email Address" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" />
+                        <input type="password" name="password" placeholder="Create Password" required />
+                        <input type="submit" name="register" value="Register" />
+                        <p class="signup">
+                            Already have an account ?
+                            <a href="#" onclick="toggleForm();">Sign in.</a>
+                        </p>
+                    </form>
+                </div>
+                <div class="imgBx"><img src="register.png" alt="" /></div>
             </div>
         </div>
-        <div class="user signupBx">
-            <div class="formBx">
-                <form action="/user/register" method="post">
-                    <h2>Create an account</h2>
-                    <input type="text" name="name" placeholder="Name" required pattern="[a-zA-Z ]+" />
-                    <input type="email" name="email" placeholder="Email Address" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" />
-                    <input type="password" name="password" placeholder="Create Password" required />
-                    <input type="submit" name="register" value="Register" />
-                    <p class="signup">
-                        Already have an account ?
-                        <a href="#" onclick="toggleForm();">Sign in.</a>
-                    </p>
-                </form>
-            </div>
-            <div class="imgBx"><img src="register.png" alt="" /></div>
-        </div>
-    </div>
-</section>
+    </section>
+</body>
 <script>
     const toggleForm = () => {
         const container = document.querySelector('.container');
         container.classList.toggle('active');
     };
 </script>
+
+</html>
