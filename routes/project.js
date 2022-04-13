@@ -167,14 +167,14 @@ router.get("/project/updateFile*", checkAuthenticated, (req, res) => {
   const projectname = req.query.projectname;
   const file = req.query.newfilename;
   const oldfilename = req.query.oldfilename;
+
   fs.rename(
-    path.join(__dirname, "../", userid.toString(), projectname, oldfilename),
-    path.join(__dirname, "../", userid.toString(), projectname, file),
+    path.join(__dirname, "../", userid.toString(), projectname.toString(), oldfilename.toString()),
+    path.join(__dirname, "../", userid.toString(), projectname.toString(), file.toString()),
     err => {
       if (err) {
         console.log(err);
       } else {
-        console.log("File renamed");
         res.send("File updated");
       }
     }
