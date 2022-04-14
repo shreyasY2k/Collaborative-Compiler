@@ -21,12 +21,14 @@
         "express-flash": "0.0.2",
         "express-session": "^1.17.2",
         "fs": "0.0.1-security",
+        "http": "0.0.1-security",
         "jszip": "^3.9.0",
         "method-override": "^3.0.0",
         "mongoose": "^6.2.8",
         "passport": "^0.5.2",
         "passport-local": "^1.0.0",
         "path": "^0.12.7",
+        "socket.io": "^4.4.1",
         "zip-lib": "^0.7.3"
     },
     "devDependencies": {

@@ -7,7 +7,6 @@ const path = require("path");
 const indexRouter = require("./routes/index");
 const userRouter = require("./routes/user");
 const projectRouter = require("./routes/project");
-
 const mongooose = require("mongoose");
 
 mongooose.connect(process.env.DB_URL, { useNewUrlParser: true });
@@ -22,19 +21,18 @@ app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
 app.use(express.static(path.join("public")));
 
+const { createServer } = require("http");
+const { Server } = require("socket.io");
+
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+});
+
+module.exports.io = io;
+
+httpServer.listen(3000);
 app.use("/", indexRouter);
 app.use("/user", userRouter);
 app.use("/user", projectRouter);
 
-app.listen(process.env.PORT || 3000);
-
-
-// <%files.map( file => {%>
-//         <div class="panel panel-default">
-//             <div class="panel-body">
-//                 <h3>
-//                     <%= file%>
-//                 </h3>
-//             </div>
-//         </div>
-//         <%})%>
+// app.listen(process.env.PORT || 3000);
