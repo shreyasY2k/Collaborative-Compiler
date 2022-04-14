@@ -140,11 +140,17 @@ router.get("/project/open", checkAuthenticated, async (req, res) => {
       io.io.emit("renameFile", file.projectName, file.oldFileName, file.newFileName);
     });
 
-    // socket.on("updateFile", (file) => {
-    //   fs.writeFileSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.fileName), file.fileContent);
-    //   io.io.emit("updateFile", file.projectName, file.fileName);
-    // });
+    socket.on("updateFile", (file) => {
+      fs.writeFileSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.fileName), file.fileContent);
+      io.io.emit("updateFile", file.projectName, file.fileName);
+    });
 
+    socket.on("getFile", (file) => {
+
+      //get file content
+      const fileContent = fs.readFileSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.fileName), "utf8");
+      io.io.emit("fileContent", {projectName:file.projectName, fileName:file.fileName, fileContent:fileContent});
+    });
 
     socket.on("disconnect", () => {
       console.log("user disconnected");

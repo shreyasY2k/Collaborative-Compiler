@@ -156,36 +156,52 @@ function getFile(element) {
     .innerText.toString()
     .trim();
 
-  //send request through socket to get the file
+  //send request through socket to get the file content
+  socket.emit("getFile", {
+    projectName: projectName,
+    fileName: fileName
+  });
 
-  var url = `/user/project/getFile?projectname=${projectName}&filename=${fileName}`;
-  //fetch file content from server and display it in the text area
-  fetch(url)
-    .then(function (response) {
-      return response.text();
-    })
-    .then(function (data) {
-      //set value inside the monaco editor
-      var editor = monaco.editor.getModels()[0];
-      editor.setValue(data);
+}
+var editor;
+function removeEditor() {
+  if(editor) {
+    editor.getModel().dispose();
+  }
+}
+socket.on("fileContent", function(data) {
+  console.log(data);
+  var fileContent = data.fileContent;
+  var fileName = data.fileName;
+  var projectName = data.projectName;
+  removeEditor()
+  editor = monaco.editor.create(document.getElementById("editor"), {
+  value: fileContent,
+  language: "javascript",
+  theme: "vs-dark"
+});
+editor.onDidChangeModelContent(event => {
+  sendFileContent();
+});
+})
+
+//on every key press in editor, send the content to the server with the file name and project name
+function sendFileContent() {
+    var editor = monaco.editor.getModels()[0];
+    var fileName = "c.py"
+    var projectName = document
+        .querySelector("#projectName")
+        .innerText.toString()
+        .trim();
+    var fileContent = editor.getValue();
+    socket.emit("updateFile", {
+        projectName: projectName,
+        fileName: fileName,
+        fileContent: fileContent
     });
 }
 
-//on every key press in editor, send the content to the server with the file name and project name
-// function sendFileContent() {
-//     var editor = monaco.editor.getModels()[0];
-//     var fileName = "b.py"
-//     var projectName = document
-//         .querySelector("#projectName")
-//         .innerText.toString()
-//         .trim();
-//     var fileContent = editor.getValue();
-//     socket.emit("updateFile", {
-//         projectName: projectName,
-//         fileName: fileName,
-//         fileContent: fileContent
-//     });
-// }
+
 
 //listen for onDidChangeContent event and send the content to the server
 // monaco.editor.onDidChangeModelContent(sendFileContent);

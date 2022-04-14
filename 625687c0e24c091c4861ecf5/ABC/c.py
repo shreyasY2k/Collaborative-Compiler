@@ -1,3 +1,2 @@
-function x() {
-	console.log("Hello world!");
-}
+gfgkyeagykdhaljwdliawnh
+dawgduigqwudhhxh
