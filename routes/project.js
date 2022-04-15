@@ -121,26 +121,31 @@ router.get("/project/open", checkAuthenticated, async (req, res) => {
   const userid = req.user._id;
   const projectname = req.query.projectname;
   io.io.on("connection", socket => {
-    socket.emit("hello", "world");
-    //listen for deleteFile event
     socket.on("deleteFile", (file) => {
+      if (fs.existsSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.fileName))) {
       fs.unlinkSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.fileName));
       io.io.emit("deleteFile", file.projectName, file.fileName);
-    });
+    }});
 
     //listen for addFile event
     socket.on("addFile", (file) => {
+            if (!fs.existsSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.fileName))) {
+
       fs.writeFileSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.fileName), file.fileContent);
       io.io.emit("addFile", file.projectName, file.fileName);
-    });
+    }});
 
     //listen for renameFile event
     socket.on("renameFile", (file) => {
+      console.log("file rename");
+            if (fs.existsSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.oldFileName))) {
+
       fs.renameSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.oldFileName), path.join(__dirname, "../", userid.toString(), file.projectName, file.newFileName));
       io.io.emit("renameFile", file.projectName, file.oldFileName, file.newFileName);
-    });
+        }    });
 
     socket.on("updateFile", (file) => {
+
       fs.writeFileSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.fileName), file.fileContent);
       io.io.emit("updateFile", file.projectName, file.fileName);
     });
@@ -153,13 +158,15 @@ router.get("/project/open", checkAuthenticated, async (req, res) => {
     });
 
     socket.on("disconnect", () => {
-      console.log("user disconnected");
+      //destroy socket connection
+      socket.removeAllListeners();
+      socket.leave(socket.id)
+      socket.disconnect();
+
     }
     );
-
-
-
   });
+
   var fileList = fs
     .readdirSync(path.join(__dirname, "../", userid + "/" + projectname), {
       withFileTypes: true

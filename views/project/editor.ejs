@@ -60,11 +60,22 @@
                 </div>
             </nav>
             <!-- Page content-->
-            <div class="container-fluid">
-                <p id="editor" style="width: auto; height: 500px;">
+            <div class="container-fluid row p-4">
+                <p id="editor" class="col-lg-9" style="height: 400px">
                 </p>
+                <div id="compiler" class="col d-none">
+                    <div class="align-self-start">
+                        <input id="stdin" class="form-control row m-1" placeholder="Inputs (seperated by an ' | ' symbol)" />
+                        <button id="compile" class="btn btn-primary row m-1">Compile</button>
+                        <div class="fakeScreen row m-1" id="opscreen">
+                            <p class="line1">Output<span class="cursor1">_</span></p>
+                            <p class="line4">><span id="output" class="cursor4">_</span></p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
 </body>
 
 </html>
