@@ -1,5 +1,5 @@
 const socket = io();
-//page reload event
+
 socket.on("disconnect", function() {
   socket.off("disconnect");
   socket.off("addFile");
@@ -33,32 +33,34 @@ socket.on("addFile", (projectName,fileName) => {
     "class",
     "list-group-item list-group-item-action list-group-item-light p-3"
   );
-  span.innerHTML = `<i class="fa fa-file"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${fileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
+ span.innerHTML = `<i class="fa fa-lg fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${fileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
   listGroup.appendChild(span);
   document.querySelector("#fileName").value = "";
   document.querySelector("#fileInputContainer").remove();
 });
 
 function editFileName(element) {
-  var fileName = element.parentElement.parentElement.innerText
-    .toString()
-    .trim();
-  //create input tick and times as an element next to the file name
-  var listGroup = document.querySelector(".list-group");
-  var listGroupItem = document.createElement("li");
-  listGroupItem.id = "fileInputContainer";
-  listGroupItem.classList.add("list-group-item");
-  listGroupItem.classList.add("d-flex");
-  listGroupItem.classList.add("justify-content-between");
-  listGroupItem.classList.add("align-items-center");
-  listGroupItem.innerHTML = `<input type="text" id="fileName" class="form-control" placeholder="File Name" aria-label="File Name" value="${fileName}">&nbsp;&nbsp;
-    <a onclick="updateFileName(this);"><i class="fas fa-check"></i></a>&nbsp;&nbsp;
-    <a onclick="cancel()"><i class="fas fa-times"></i></a>
+  if (!document.querySelector("#fileName")) {
+    var fileName = element.parentElement.parentElement.innerText
+      .toString()
+      .trim();
+    //create input tick and times as an element next to the file name
+    var listGroup = document.querySelector(".list-group");
+    var listGroupItem = document.createElement("li");
+    listGroupItem.id = "fileInputContainer";
+    listGroupItem.classList.add("list-group-item");
+    listGroupItem.classList.add("d-flex");
+    listGroupItem.classList.add("justify-content-between");
+    listGroupItem.classList.add("align-items-center");
+    listGroupItem.innerHTML = `<input type="text" id="fileName" class="form-control" placeholder="File Name" aria-label="File Name" value="${fileName}">&nbsp;&nbsp;
+    <a onclick="updateFileName(this);"><i class="fa fa-lg fa-check"></i></a>&nbsp;&nbsp;
+    <a onclick="cancel()"><i class="fa fa-lg fa-times"></i></a>
     `;
-  listGroup.insertBefore(
-    listGroupItem,
-    element.parentElement.parentElement.nextSibling
-  );
+    listGroup.insertBefore(
+      listGroupItem,
+      element.parentElement.parentElement.nextSibling
+    );
+  }
 }
 function updateFileName(element) {
   var fileName = document.querySelector("#fileName").value;
@@ -99,6 +101,7 @@ socket.on("renameFile", (projectName,oldFileName,newFileName) => {
 
 
 function deleteFile(element) {
+  if(!document.querySelector("#fileName")){
   var fileName = element.parentElement.parentElement.innerText
     .toString()
     .trim();
@@ -112,7 +115,7 @@ function deleteFile(element) {
     projectName: projectName,
     fileName: fileName,
   });
-}
+}}
 socket.on("deleteFile", (projectName,fileName) => {
   deleteFileFromList(fileName);
 })
@@ -142,18 +145,23 @@ window.addEventListener("DOMContentLoaded", event => {
 
   document.querySelector("#createFile").addEventListener("click", function () {
     //create input tick and times as the first element in the list group cclass
-    var listGroup = document.querySelector(".list-group");
-    var listGroupItem = document.createElement("li");
-    listGroupItem.id = "fileInputContainer";
-    listGroupItem.classList.add("list-group-item");
-    listGroupItem.classList.add("d-flex");
-    listGroupItem.classList.add("justify-content-between");
-    listGroupItem.classList.add("align-items-center");
-    listGroupItem.innerHTML = `<input type="text" id="fileName" class="form-control" placeholder="File Name" aria-label="File Name">&nbsp;&nbsp;
-        <a onclick="addFile();"><i class="fas fa-check"></i></a>&nbsp;&nbsp;
-        <a onclick="cancel()"><i class="fas fa-times"></i></a>
+    if (!document.querySelector("#fileName")) {
+      var listGroup = document.querySelector(".list-group");
+      var listGroupItem = document.createElement("li");
+      listGroupItem.id = "fileInputContainer";
+      listGroupItem.classList.add("list-group-item");
+      listGroupItem.classList.add("d-flex");
+      listGroupItem.classList.add("justify-content-between");
+      listGroupItem.classList.add("align-items-center");
+      listGroupItem.innerHTML = `<input type="text" id="fileName" class="form-control" placeholder="File Name" aria-label="File Name">&nbsp;&nbsp;
+        <a onclick="addFile();"><i class="fa fa-lg fa-check"></i></a>&nbsp;&nbsp;
+        <a onclick="cancel()"><i class="fa fa-lg fa-times"></i></a>
         `;
-    listGroup.prepend(listGroupItem);
+      listGroup.prepend(listGroupItem);
+    }
+  });
+  document.querySelector("#compile").addEventListener("click", e => {
+    compileIt();
   });
 });
 function checkEmpty(fileName) {
@@ -205,6 +213,8 @@ function getFile(element) {
 var editor;
 function removeEditor() {
   if(editor) {
+    document.querySelector("#editor").innerHTML = "";
+    document.querySelector("#editor").classList.remove("col-lg-9");
     editor.getModel().dispose();
   }
 }
@@ -224,6 +234,8 @@ socket.on("fileContent", function(data) {
   removeEditor()
   //create a monaco model
   var model = monaco.editor.createModel(fileContent, undefined,monaco.Uri.file(fileName));
+      document.querySelector("#editor").classList.add("col-lg-9");
+
   document.querySelector("#compiler").classList.remove("d-none");
   document.querySelector("#compiler").classList.add("d-inline");
   //add the model to the editor
@@ -273,6 +285,34 @@ function sendFileContent() {
         fileContent: fileContent
     });
 }
+
+async function compileIt() {
+  var editor = monaco.editor.getModels()[0];
+  document.getElementById("opscreen").style.visibility = "visible";
+  await fetch("https://codeorbored.herokuapp.com", {
+    method: "POST",
+    headers: {
+      "Content-Type": "text/plain"
+    },
+    body: JSON.stringify({
+      code: editor.getValue(),
+      language: document.querySelector("#dropdown-language").value,
+      standardIn: document
+        .querySelector("#stdin")
+        .value.split(/[|]+/)
+        .join("\n")
+    })
+  })
+    .then(response => {
+      console.log(response);
+      return response.json();
+    })
+    .then(data => {
+      document.querySelector("#output").innerHTML = data.output;
+    })
+    .catch(error => alert(error.message));
+}
+
 
 
 

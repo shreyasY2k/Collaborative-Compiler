@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script src="/js/languages.js"></script>
     <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -26,12 +27,12 @@
 
 </head>
 
-<body>
+<body onload="addlist()">
     <div class="d-flex" id="wrapper">
         <!-- Sidebar-->
-        <div class="border-end bg-white" id="sidebar-wrapper">
-            <div class="sidebar-heading bg-light"><i class="fa fa-folder-open"></i>&nbsp;
-                <span id="projectName"><%= projectname %></span>&nbsp;<a id="createFile"><i class="fa fa-plus-square"></i></a></div>
+        <div class="border-end bg-dark" id="sidebar-wrapper">
+            <div class="sidebar-heading bg-dark border-bottom color-white"><i class="fa fa-lg fa-folder"></i>&nbsp;
+                <span id="projectName"><%= projectname %></span>&nbsp;<a id="createFile"><i class="fa fa-plus"></i></a></div>
             <div class="list-group list-group-flush">
                 <% for (var i = 0; i < files.length; i++) { %>
                     <span class="list-group-item list-group-item-action list-group-item-light p-3">
@@ -47,9 +48,9 @@
         <!-- Page content wrapper-->
         <div id="page-content-wrapper">
             <!-- Top navigation-->
-            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
                 <div class="container-fluid">
-                    <a id="sidebarToggle"><i class="fa fa-folder-closed"></i></a>
+                    <a id="sidebarToggle"><i class="fa fa-lg fa-code"></i></a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
                     <div class="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
@@ -61,21 +62,26 @@
             </nav>
             <!-- Page content-->
             <div class="container-fluid row p-4">
-                <p id="editor" class="col-lg-9" style="height: 400px">
+                <p class="col-lg-9" id="editor" style="width: 700px;height: 580px;">
                 </p>
-                <div id="compiler" class="col d-none">
-                    <div class="align-self-start">
-                        <input id="stdin" class="form-control row m-1" placeholder="Inputs (seperated by an ' | ' symbol)" />
-                        <button id="compile" class="btn btn-primary row m-1">Compile</button>
-                        <div class="fakeScreen row m-1" id="opscreen">
+                <div style="margin-left: 25px;" id="compiler" class="compiler col d-none">
+                    <select id="dropdown-language" class="dropdown m-2 mt-4">
+                  </select>
+                    <div class="input-group mb-3 mt-4">
+                        <input type="text" id="stdin" class="form-control m-2" placeholder="Inputs seperated by '|'" aria-label="Recipient's username" aria-describedby="button-addon2">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-success m-2" type="button" id="compile">Run</button>
+                        </div>
+                    </div>
+                    <div class="output p-3">
+                        <div class="fakeScreen " id="opscreen" style="visibility: hidden; color: floralwhite;">
                             <p class="line1">Output<span class="cursor1">_</span></p>
-                            <p class="line4">><span id="output" class="cursor4">_</span></p>
+                            <p class="line4">&gt;<span id="output" class="cursor4"></span></p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 </body>
 
 </html>
