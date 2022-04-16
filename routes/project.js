@@ -42,6 +42,7 @@ const path = require("path");
 const AWS = require("aws-sdk");
 const fs = require("fs");
 const io = require("../server");
+const fetch = require("node-fetch");
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
@@ -156,6 +157,40 @@ router.get("/project/open", checkAuthenticated, async (req, res) => {
       const fileContent = fs.readFileSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.fileName), "utf8");
       io.io.emit("fileContent", {projectName:file.projectName, fileName:file.fileName, fileContent:fileContent});
     });
+
+    socket.on("autoSuggest", (file) => {
+      var question = file.lineContent
+      //fetch request to codegrepper
+      fetch(
+        "https://www.codegrepper.com/api/search.php?q=" +
+          question +
+          "&search_options=search_titles"
+      )
+        .then(res => res.json())
+        .then(data => {
+          //send response to client
+          socket.emit("autoSuggest", {data:data,lineNumber:file.lineNumber});
+        }
+        );
+    })
+    socket.on("compile", async (file) => {
+        await fetch("https://codeorbored.herokuapp.com", {
+    method: "POST",
+    headers: {
+      "Content-Type": "text/plain"
+    },
+    body: file.body
+  })
+    .then(response => {
+      return response.json();
+    })
+    .then(data => {
+       socket.emit("compileOutput", {output:data.output});
+    })
+    .catch(error => alert(error.message));
+
+
+    })
 
     socket.on("disconnect", () => {
       //destroy socket connection

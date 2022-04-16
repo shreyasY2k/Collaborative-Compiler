@@ -11208,20 +11208,9 @@ a {
     color: white;
     overflow: hidden;
     text-overflow: ellipsis;
-    /* overflow-x: hidden; */
-    /* white-space: nowrap; */
-    /* display: inline; */
-    /* max-width: 90px; */
-    /* width: 10px; */
-    /* width: min-content; */
-    /* width: unset; */
-    /* min-width: unset; */
-    /* max-width: unset; */
     display: inline-block;
+    white-space: nowrap;
     max-width: 100px;
-    /* margin-right: -10;
-    margin-right: -10;
-    margin: 0; */
     vertical-align: middle;
 }
 
@@ -11270,6 +11259,18 @@ a {
     border-bottom-color: white;
 }
 
+
+/* .list-group-flush>.list-group-item{
+border-bottom-width: 1px;
+border-bottom-color: white;
+} */
+
+
+/* select:hover{
+    background-color: #084298;
+
+} */
+
 #language {
     border-color: grey;
     border-radius: 8px;
@@ -11280,7 +11281,7 @@ a {
 
 .form-control {
     background-color: #e8e8e8;
-    border-radius: 8px;
+    border-radius: 10px;
 }
 
 .list-group-item {
@@ -11288,4 +11289,14 @@ a {
     border-bottom: white;
     font-family: sans-serif;
     letter-spacing: 2px;
+}
+
+#projectName {
+    color: white;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    white-space: nowrap;
+    max-width: 140px;
+    vertical-align: middle;
 }

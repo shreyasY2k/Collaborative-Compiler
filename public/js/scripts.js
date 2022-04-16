@@ -245,22 +245,60 @@ socket.on("fileContent", function(data) {
     autoClosingBrackets: true,
     fontSize: 14,
     fontFamily: "Consolas, 'Courier New', monospace",
-    minimap: {
-      enabled: true
-    },
     lightbulb: {
       enabled: true
     },
     matchBrackets: true,
     autoClosingQuotes: "always",
     bracketPairColorization: true,
-    showUnused: true,
   });
 
 
 editor.onDidChangeModelContent(event => {
   sendFileContent();
+  //if line starts with // and ends with .
+  var lineNumber = editor.getPosition().lineNumber;
+  var lineContent = editor.getModel().getLineContent(lineNumber);
+  if (lineContent.startsWith("//") && lineContent.endsWith(".")) {
+  lineContent = lineContent.substring(2, lineContent.length - 1);
+  socket.emit("autoSuggest", {
+    lineNumber: lineNumber,
+    lineContent: lineContent
+  })
+}
 });
+})
+
+socket.on("autoSuggest", function(data) {
+  if (data.data.answers.length == 0) {
+  //get entire editor content and replace the line with the new line an set value
+  var editorContent = editor.getModel().getValue();
+  var lineNumber = data.lineNumber;
+  var lineContent = editor.getModel().getLineContent(lineNumber);
+  var newLineContent = "No suggestions found";
+  var newEditorContent = editorContent.replace(
+    lineContent,
+    newLineContent
+  );
+  editor.getModel().setValue(newEditorContent);
+  var cursorPosition = new monaco.Position(lineNumber, newLineContent.length);
+  editor.setPosition(cursorPosition);
+
+  }
+  else {
+    var editorContent = editor.getModel().getValue();
+    var lineNumber = data.lineNumber;
+    var lineContent = editor.getModel().getLineContent(lineNumber);
+    var newLineContent = data.data.answers[0].answer;
+    var newEditorContent = editorContent.replace(
+      lineContent,
+      newLineContent
+    );
+    editor.getModel().setValue(newEditorContent);
+    var cursorPosition = new monaco.Position(lineNumber, newLineContent.length);
+    editor.setPosition(cursorPosition);
+
+  }
 })
 
 //on every key press in editor, send the content to the server with the file name and project name
@@ -286,14 +324,9 @@ function sendFileContent() {
     });
 }
 
-async function compileIt() {
+function compileIt() {
   var editor = monaco.editor.getModels()[0];
-  document.getElementById("opscreen").style.visibility = "visible";
-  await fetch("https://codeorbored.herokuapp.com", {
-    method: "POST",
-    headers: {
-      "Content-Type": "text/plain"
-    },
+  socket.emit("compile", {
     body: JSON.stringify({
       code: editor.getValue(),
       language: document.querySelector("#dropdown-language").value,
@@ -302,16 +335,12 @@ async function compileIt() {
         .value.split(/[|]+/)
         .join("\n")
     })
-  })
-    .then(response => {
-      console.log(response);
-      return response.json();
-    })
-    .then(data => {
-      document.querySelector("#output").innerHTML = data.output;
-    })
-    .catch(error => alert(error.message));
+  });
 }
+socket.on("compileOutput", function(data) {
+    document.getElementById("opscreen").style.visibility = "visible";
+  document.getElementById("output").innerHTML = data.output;
+})
 
 
 

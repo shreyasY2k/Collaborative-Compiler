@@ -1,14 +1,13 @@
-#include <stdio.h>
-int main() {    
+# For Perl (language) only
 
-    int number1, number2, sum;
-    
-    printf("Enter two integers: ");
-    scanf("%d %d", &number1, &number2);
+# syntax (NOTE: this overwrites your original string)
+<variable> =~ s/<substring-to-replace>/<replacing-substring>/g;
 
-    // calculating sum
-    sum = number1 + number2;      
-    
-    printf("%d + %d = %d", number1, number2, sum);
-    return 0;
-}
+# example: replacing all the 'r' characters with 'l'
+$YourVar =~ s/r/l/g;
+
+# usable example
+my $YourVar = "strawberry";
+$YourVar =~ s/r/l/g;
+print $YourVar; 
+print "\n";
