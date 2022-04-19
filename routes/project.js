@@ -43,7 +43,7 @@ const AWS = require("aws-sdk");
 const fs = require("fs");
 const io = require("socket.io")(3001, {
   cors: {
-    origin: "http://127.0.0.1",
+    origin: "https://my-collab-editor.herokuapp.com",
     methods: ["GET", "POST"]
   }
 });
