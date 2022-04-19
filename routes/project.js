@@ -41,7 +41,7 @@ const zl = require("zip-lib");
 const path = require("path");
 const AWS = require("aws-sdk");
 const fs = require("fs");
-const io = require("socket.io")({
+const io = require("socket.io")(process.env.PORT, {
   cors: {
     origin: "https://my-collab-editor.herokuapp.com",
     methods: ["GET", "POST"]
