@@ -124,7 +124,6 @@ io.on("connection", socket => {
   socket.on("join", () => {
     userid = userid;
     socket.join(userid);
-    console.log(data.userid);
   });
 
 
