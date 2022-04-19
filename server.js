@@ -3,10 +3,13 @@ if (process.env.NODE_ENV != "production") {
 }
 const express = require("express");
 const app = express();
+const http = require("http").Server(app);
+global.io = require("socket.io")(http);
 const path = require("path");
 const indexRouter = require("./routes/index");
 const userRouter = require("./routes/user");
 const projectRouter = require("./routes/project");
+
 const mongooose = require("mongoose");
 
 mongooose.connect(process.env.DB_URL, { useNewUrlParser: true });
@@ -20,27 +23,12 @@ db.once("open", () => {
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
 app.use(express.static(path.join("public")));
-
-const { createServer } = require("http");
-const { Server } = require("socket.io");
-const { instrument } = require("@socket.io/admin-ui");
-
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: {
-    origin: ["https://admin.socket.io"],
-    credentials: true
-  }
-});
-instrument(io, {
-  auth: false
-});
-
-module.exports.io = io;
-
 // app.listen(3000);
 app.use("/", indexRouter);
 app.use("/user", userRouter);
 app.use("/user", projectRouter);
+http.listen(process.env.PORT || 3000, () => {
+  console.log("listening on *:3000");
+});
 
-app.listen(process.env.PORT || 3000);
+// app.listen(process.env.PORT || 3000);
