@@ -2,7 +2,7 @@ const socket = io( {
   transports: ["websocket"],
   upgrade: false
 });
-
+socket.emit("join");
 socket.on("disconnect", function () {
   socket.off("disconnect");
   socket.off("addFile");
