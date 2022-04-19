@@ -41,7 +41,12 @@ const zl = require("zip-lib");
 const path = require("path");
 const AWS = require("aws-sdk");
 const fs = require("fs");
-const io = require("../server");
+const io = require("socket.io")(3001, {
+  cors: {
+    origin: "http://127.0.0.1",
+    methods: ["GET", "POST"]
+  }
+});
 const fetch = require("node-fetch");
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -117,93 +122,179 @@ router.get("/project/download", checkAuthenticated, (req, res) => {
     );
   });
 });
-
-router.get("/project/open", checkAuthenticated, async (req, res) => {
-  const userid = req.user._id;
-  const projectname = req.query.projectname;
-  io.io.on("connection", socket => {
-    socket.on("deleteFile", (file) => {
-      if (fs.existsSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.fileName))) {
-      fs.unlinkSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.fileName));
-      io.io.emit("deleteFile", file.projectName, file.fileName);
-    }});
-
-    //listen for addFile event
-    socket.on("addFile", (file) => {
-            if (!fs.existsSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.fileName))) {
-
-      fs.writeFileSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.fileName), file.fileContent);
-      io.io.emit("addFile", file.projectName, file.fileName);
-    }});
-
-    //listen for renameFile event
-    socket.on("renameFile", (file) => {
-      console.log("file rename");
-            if (fs.existsSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.oldFileName))) {
-
-      fs.renameSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.oldFileName), path.join(__dirname, "../", userid.toString(), file.projectName, file.newFileName));
-      io.io.emit("renameFile", file.projectName, file.oldFileName, file.newFileName);
-        }    });
-
-    socket.on("updateFile", (file) => {
-
-      fs.writeFileSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.fileName), file.fileContent);
-      io.io.emit("updateFile", file.projectName, file.fileName);
-    });
-
-    socket.on("getFile", (file) => {
-
-      //get file content
-      const fileContent = fs.readFileSync(path.join(__dirname, "../", userid.toString(), file.projectName, file.fileName), "utf8");
-      io.io.emit("fileContent", {projectName:file.projectName, fileName:file.fileName, fileContent:fileContent});
-    });
-
-    socket.on("autoSuggest", (file) => {
-      var question = file.lineContent
-      //fetch request to codegrepper
-      fetch(
-        "https://www.codegrepper.com/api/search.php?q=" +
-          question +
-          "&search_options=search_titles"
+var userid;
+io.on("connection", socket => {
+  console.log("a user connected");
+  socket.on("deleteFile", file => {
+    if (
+      fs.existsSync(
+        path.join(
+          __dirname,
+          "../",
+          userid.toString(),
+          file.projectName,
+          file.fileName
+        )
       )
-        .then(res => res.json())
-        .then(data => {
-          //send response to client
-          socket.emit("autoSuggest", {data:data,lineNumber:file.lineNumber});
-        }
-        );
-    })
-    socket.on("compile", async (file) => {
-        await fetch("https://codeorbored.herokuapp.com", {
-    method: "POST",
-    headers: {
-      "Content-Type": "text/plain"
-    },
-    body: file.body
-  })
-    .then(response => {
-      return response.json();
-    })
-    .then(data => {
-       socket.emit("compileOutput", {output:data.output});
-    })
-    .catch(error => alert(error.message));
-
-
-    })
-
-    socket.on("disconnect", () => {
-      //destroy socket connection
-      socket.removeAllListeners();
-      socket.leave(socket.id)
-      socket.disconnect();
-
+    ) {
+      fs.unlinkSync(
+        path.join(
+          __dirname,
+          "../",
+          userid.toString(),
+          file.projectName,
+          file.fileName
+        )
+      );
+      socket.emit("deleteFile", file.projectName, file.fileName);
     }
-    );
   });
 
+  //listen for addFile event
+  socket.on("addFile", file => {
+    if (
+      !fs.existsSync(
+        path.join(
+          __dirname,
+          "../",
+          userid.toString(),
+          file.projectName,
+          file.fileName
+        )
+      )
+    ) {
+      fs.writeFileSync(
+        path.join(
+          __dirname,
+          "../",
+          userid.toString(),
+          file.projectName,
+          file.fileName
+        ),
+        file.fileContent
+      );
+      socket.emit("addFile", file.projectName, file.fileName);
+    }
+  });
+
+  //listen for renameFile event
+  socket.on("renameFile", file => {
+    console.log("file rename");
+    if (
+      fs.existsSync(
+        path.join(
+          __dirname,
+          "../",
+          userid.toString(),
+          file.projectName,
+          file.oldFileName
+        )
+      )
+    ) {
+      fs.renameSync(
+        path.join(
+          __dirname,
+          "../",
+          userid.toString(),
+          file.projectName,
+          file.oldFileName
+        ),
+        path.join(
+          __dirname,
+          "../",
+          userid.toString(),
+          file.projectName,
+          file.newFileName
+        )
+      );
+      socket.emit(
+        "renameFile",
+        file.projectName,
+        file.oldFileName,
+        file.newFileName
+      );
+    }
+  });
+
+  socket.on("updateFile", file => {
+    fs.writeFileSync(
+      path.join(
+        __dirname,
+        "../",
+        userid.toString(),
+        file.projectName,
+        file.fileName
+      ),
+      file.fileContent
+    );
+    socket.emit("updateFile", file.projectName, file.fileName);
+  });
+
+  socket.on("getFile", file => {
+    //get file content
+    const fileContent = fs.readFileSync(
+      path.join(
+        __dirname,
+        "../",
+        userid.toString(),
+        file.projectName,
+        file.fileName
+      ),
+      "utf8"
+    );
+    socket.emit("fileContent", {
+      projectName: file.projectName,
+      fileName: file.fileName,
+      fileContent: fileContent
+    });
+  });
+
+  socket.on("autoSuggest", file => {
+    var question = file.lineContent;
+    //fetch request to codegrepper
+    fetch(
+      "https://www.codegrepper.com/api/search.php?q=" +
+        question +
+        "&search_options=search_titles"
+    )
+      .then(res => res.json())
+      .then(data => {
+        //send response to client
+        socket.emit("autoSuggest", { data: data, lineNumber: file.lineNumber });
+      });
+  });
+  socket.on("compile", async file => {
+    await fetch("https://codeorbored.herokuapp.com", {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain"
+      },
+      body: file.body
+    })
+      .then(response => {
+        return response.json();
+      })
+      .then(data => {
+        socket.emit("compileOutput", { output: data.output });
+      })
+      .catch(error => alert(error.message));
+  });
+
+  socket.on("disconnect", () => {
+    //destroy socket connection
+    console.log("user disconnected");
+    socket.removeAllListeners();
+    socket.leave(socket.id);
+    socket.disconnect();
+  });
+});
+router.get("/project/open", checkAuthenticated, async (req, res) => {
+  userid = req.user._id;
+  const userId = req.user._id;
+  const projectname = req.query.projectname;
+
   var fileList = fs
-    .readdirSync(path.join(__dirname, "../", userid + "/" + projectname), {
+    .readdirSync(path.join(__dirname, "../", userId + "/" + projectname), {
       withFileTypes: true
     })
     .filter(item => !item.isDirectory())

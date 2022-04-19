@@ -1,6 +1,9 @@
-const socket = io();
+const socket = io("http://127.0.0.1:3001", {
+  transports: ["websocket"],
+  upgrade: false
+});
 
-socket.on("disconnect", function() {
+socket.on("disconnect", function () {
   socket.off("disconnect");
   socket.off("addFile");
   socket.off("renameFile");
@@ -8,11 +11,20 @@ socket.on("disconnect", function() {
   socket.off("getFile");
   socket.off("fileContent");
   removeEditor();
-})
+});
 
 function addFile() {
   var fileName = document.querySelector("#fileName").value;
-  if (checkEmpty(fileName) || checkAlreadyExists(fileName)) {
+  if (!validateFileName(fileName)) {
+    document.querySelector("#fileName").classList.remove("is-valid");
+    document.querySelector("#fileName").classList.add("is-invalid");
+    document.querySelector("#fileName").placeholder = "Enter valid file name";
+    return;
+  }
+  if (checkAlreadyExists(fileName)) {
+    document.querySelector("#fileName").classList.remove("is-valid");
+    document.querySelector("#fileName").classList.add("is-invalid");
+    document.querySelector("#fileName").placeholder = "File already exists";
     return;
   }
   //send file name and project name to server
@@ -26,14 +38,14 @@ function addFile() {
     fileContent: ""
   });
 }
-socket.on("addFile", (projectName,fileName) => {
+socket.on("addFile", (projectName, fileName) => {
   var listGroup = document.querySelector(".list-group");
   var span = document.createElement("span");
   span.setAttribute(
     "class",
     "list-group-item list-group-item-action list-group-item-light p-3"
   );
- span.innerHTML = `<i class="fa fa-lg fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${fileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
+  span.innerHTML = `<i class="fa fa-lg fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${fileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
   listGroup.appendChild(span);
   document.querySelector("#fileName").value = "";
   document.querySelector("#fileInputContainer").remove();
@@ -65,7 +77,16 @@ function editFileName(element) {
 function updateFileName(element) {
   var fileName = document.querySelector("#fileName").value;
   //check if the file name is empty or already exists
-  if (checkEmpty(fileName) || checkAlreadyExists(fileName)) {
+  if (!validateFileName(fileName)) {
+    document.querySelector("#fileName").classList.remove("is-valid");
+    document.querySelector("#fileName").classList.add("is-invalid");
+    document.querySelector("#fileName").placeholder = "Enter valid file name";
+    return;
+  }
+  if (checkAlreadyExists(fileName)) {
+    document.querySelector("#fileName").classList.remove("is-valid");
+    document.querySelector("#fileName").classList.add("is-invalid");
+    document.querySelector("#fileName").placeholder = "File already exists";
     return;
   }
 
@@ -82,57 +103,56 @@ function updateFileName(element) {
     listElement: element.parentElement.previousElementSibling.outerHTML
   });
 }
-socket.on("renameFile", (projectName,oldFileName,newFileName) => {
+socket.on("renameFile", (projectName, oldFileName, newFileName) => {
   var oldFileName = oldFileName;
   var projectName = projectName;
   //remove the old filename from the file li containing the old name
   var listGroup = document.querySelector(".list-group");
-   var span = document.createElement("span");
-   span.setAttribute(
-     "class",
-     "list-group-item list-group-item-action list-group-item-light p-3"
-   );
-   span.innerHTML = `<i class="fa fa-file"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${newFileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
-   listGroup.appendChild(span);
-   document.querySelector("#fileName").value = "";
-   document.querySelector("#fileInputContainer").remove();
-    deleteFileFromList(oldFileName);
-})
-
+  var span = document.createElement("span");
+  span.setAttribute(
+    "class",
+    "list-group-item list-group-item-action list-group-item-light p-3"
+  );
+  span.innerHTML = `<i class="fa fa-file"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${newFileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
+  listGroup.appendChild(span);
+  document.querySelector("#fileName").value = "";
+  document.querySelector("#fileInputContainer").remove();
+  deleteFileFromList(oldFileName);
+});
 
 function deleteFile(element) {
-  if(!document.querySelector("#fileName")){
-  var fileName = element.parentElement.parentElement.innerText
-    .toString()
-    .trim();
-  var projectName = document
-    .querySelector("#projectName")
-    .innerText.toString()
-    .trim();
+  if (!document.querySelector("#fileName")) {
+    var fileName = element.parentElement.parentElement.innerText
+      .toString()
+      .trim();
+    var projectName = document
+      .querySelector("#projectName")
+      .innerText.toString()
+      .trim();
 
-  //send delete file request to socket on server and then remove the file from the list
-  socket.emit("deleteFile", {
-    projectName: projectName,
-    fileName: fileName,
-  });
-}}
-socket.on("deleteFile", (projectName,fileName) => {
+    //send delete file request to socket on server and then remove the file from the list
+    socket.emit("deleteFile", {
+      projectName: projectName,
+      fileName: fileName
+    });
+  }
+}
+socket.on("deleteFile", (projectName, fileName) => {
   deleteFileFromList(fileName);
-})
+});
 
 //deleteFile function
-function deleteFileFromList(fileName){
+function deleteFileFromList(fileName) {
   //search for the file name in the list
   var listGroup = document.querySelector(".list-group");
   var listGroupItems = listGroup.querySelectorAll(".list-group-item");
-  for(var i=0;i<listGroupItems.length;i++){
-    if(listGroupItems[i].innerText.toString().trim() === fileName){
+  for (var i = 0; i < listGroupItems.length; i++) {
+    if (listGroupItems[i].innerText.toString().trim() === fileName) {
       listGroup.removeChild(listGroupItems[i]);
       break;
     }
   }
 }
-
 
 window.addEventListener("DOMContentLoaded", event => {
   const sidebarToggle = document.body.querySelector("#sidebarToggle");
@@ -164,34 +184,28 @@ window.addEventListener("DOMContentLoaded", event => {
     compileIt();
   });
 });
-function checkEmpty(fileName) {
-  if (fileName == "") {
-    var fileNameInput = document.querySelector("#fileName");
-    fileNameInput.classList.add("is-invalid");
-    fileNameInput.classList.remove("is-valid");
-    fileNameInput.placeholder = "Name is required";
+
+function validateFileName(fileName) {
+  const fileNameRegex = /^[\w,\s-]+\.[A-Za-z]{1,6}$/;
+  if (
+    fileName.length > 0 &&
+    fileName.length <= 50 &&
+    fileNameRegex.test(fileName)
+  ) {
     return true;
   }
-}
-function checkAlreadyExists(fileName) {
-  var fileNameExists = false;
-  var listGroupItems = document.querySelectorAll(".list-group-item");
-  var listItems = []
-  for (var i = 0; i < listGroupItems.length; i++) {
-    listItems.push(listGroupItems[i].innerText.toString().trim());
-  }
-  if (listItems.includes(fileName)) {
-    fileNameExists = true;
-  }
-  if (fileNameExists) {
-    var fileNameInput = document.querySelector("#fileName");
-    fileNameInput.classList.add("is-invalid");
-    fileNameInput.classList.remove("is-valid");
-    fileNameInput.placeholder = "File already exists";
-    return true;
-  }
+  return false;
 }
 
+function checkAlreadyExists(fileName) {
+  const fileList = document.querySelector(".list-group").children;
+  for (let i = 0; i < fileList.length; i++) {
+    if (fileList[i].innerText.trim() === fileName) {
+      return true;
+    }
+  }
+  return false;
+}
 function cancel() {
   document.querySelector("#fileInputContainer").remove();
 }
@@ -208,17 +222,16 @@ function getFile(element) {
     projectName: projectName,
     fileName: fileName
   });
-
 }
 var editor;
 function removeEditor() {
-  if(editor) {
+  if (editor) {
     document.querySelector("#editor").innerHTML = "";
-    document.querySelector("#editor").classList.remove("col-lg-9");
+    document.querySelector("#editor").remove();
     editor.getModel().dispose();
   }
 }
-socket.on("fileContent", function(data) {
+socket.on("fileContent", function (data) {
   var fileContent = data.fileContent;
   var fileName = data.fileName;
   var projectName = data.projectName;
@@ -231,11 +244,22 @@ socket.on("fileContent", function(data) {
       listGroupItems[i].classList.remove("active");
     }
   }
-  removeEditor()
+  removeEditor();
   //create a monaco model
-  var model = monaco.editor.createModel(fileContent, undefined,monaco.Uri.file(fileName));
-      document.querySelector("#editor").classList.add("col-lg-9");
-
+  var model = monaco.editor.createModel(
+    fileContent,
+    undefined,
+    monaco.Uri.file(fileName)
+  );
+  //create an editor for the model
+  //create an element p as the first child of #editor
+  var editorElement = document.createElement("p");
+  editorElement.id = "editor";
+  editorElement.style.height = "580px";
+  editorElement.style.width = "700px";
+  var editorDiv = document.querySelector("#editordiv");
+  editorElement.classList.add("col-lg-9");
+  editorDiv.prepend(editorElement);
   document.querySelector("#compiler").classList.remove("d-none");
   document.querySelector("#compiler").classList.add("d-inline");
   //add the model to the editor
@@ -250,60 +274,50 @@ socket.on("fileContent", function(data) {
     },
     matchBrackets: true,
     autoClosingQuotes: "always",
-    bracketPairColorization: true,
+    bracketPairColorization: true
   });
 
-
-editor.onDidChangeModelContent(event => {
-  sendFileContent();
-  //if line starts with // and ends with .
-  var lineNumber = editor.getPosition().lineNumber;
-  var lineContent = editor.getModel().getLineContent(lineNumber);
-  if (lineContent.startsWith("//") && lineContent.endsWith(".")) {
-  lineContent = lineContent.substring(2, lineContent.length - 1);
-  socket.emit("autoSuggest", {
-    lineNumber: lineNumber,
-    lineContent: lineContent
-  })
-}
+  editor.onDidChangeModelContent(event => {
+    sendFileContent();
+    //if line starts with // and ends with .
+    var lineNumber = editor.getPosition().lineNumber;
+    var lineContent = editor.getModel().getLineContent(lineNumber);
+    if (lineContent.startsWith("//") && lineContent.endsWith(".")) {
+      lineContent = lineContent.substring(2, lineContent.length - 1);
+      socket.emit("autoSuggest", {
+        lineNumber: lineNumber,
+        lineContent: lineContent
+      });
+    }
+  });
 });
-})
 
-socket.on("autoSuggest", function(data) {
+socket.on("autoSuggest", function (data) {
   if (data.data.answers.length == 0) {
-  //get entire editor content and replace the line with the new line an set value
-  var editorContent = editor.getModel().getValue();
-  var lineNumber = data.lineNumber;
-  var lineContent = editor.getModel().getLineContent(lineNumber);
-  var newLineContent = "No suggestions found";
-  var newEditorContent = editorContent.replace(
-    lineContent,
-    newLineContent
-  );
-  editor.getModel().setValue(newEditorContent);
-  var cursorPosition = new monaco.Position(lineNumber, newLineContent.length);
-  editor.setPosition(cursorPosition);
-
-  }
-  else {
+    //get entire editor content and replace the line with the new line an set value
+    var editorContent = editor.getModel().getValue();
+    var lineNumber = data.lineNumber;
+    var lineContent = editor.getModel().getLineContent(lineNumber);
+    var newLineContent = "No suggestions found";
+    var newEditorContent = editorContent.replace(lineContent, newLineContent);
+    editor.getModel().setValue(newEditorContent);
+    var cursorPosition = new monaco.Position(lineNumber, newLineContent.length);
+    editor.setPosition(cursorPosition);
+  } else {
     var editorContent = editor.getModel().getValue();
     var lineNumber = data.lineNumber;
     var lineContent = editor.getModel().getLineContent(lineNumber);
     var newLineContent = data.data.answers[0].answer;
-    var newEditorContent = editorContent.replace(
-      lineContent,
-      newLineContent
-    );
+    var newEditorContent = editorContent.replace(lineContent, newLineContent);
     editor.getModel().setValue(newEditorContent);
     var cursorPosition = new monaco.Position(lineNumber, newLineContent.length);
     editor.setPosition(cursorPosition);
-
   }
-})
+});
 
 //on every key press in editor, send the content to the server with the file name and project name
 function sendFileContent() {
-//select the name of active file
+  //select the name of active file
   var listGroupItems = document.querySelectorAll(".list-group-item");
   for (var i = 0; i < listGroupItems.length; i++) {
     if (listGroupItems[i].classList.contains("active")) {
@@ -311,17 +325,17 @@ function sendFileContent() {
     }
   }
 
-    var editor = monaco.editor.getModels()[0];
-    var projectName = document
-        .querySelector("#projectName")
-        .innerText.toString()
-        .trim();
-    var fileContent = editor.getValue();
-    socket.emit("updateFile", {
-        projectName: projectName,
-        fileName: fileName,
-        fileContent: fileContent
-    });
+  var editor = monaco.editor.getModels()[0];
+  var projectName = document
+    .querySelector("#projectName")
+    .innerText.toString()
+    .trim();
+  var fileContent = editor.getValue();
+  socket.emit("updateFile", {
+    projectName: projectName,
+    fileName: fileName,
+    fileContent: fileContent
+  });
 }
 
 function compileIt() {
@@ -337,11 +351,7 @@ function compileIt() {
     })
   });
 }
-socket.on("compileOutput", function(data) {
-    document.getElementById("opscreen").style.visibility = "visible";
+socket.on("compileOutput", function (data) {
+  document.getElementById("opscreen").style.visibility = "visible";
   document.getElementById("output").innerHTML = data.output;
-})
-
-
-
-
+});
