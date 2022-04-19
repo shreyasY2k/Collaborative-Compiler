@@ -1,4 +1,4 @@
-const socket = io("https://my-collab-editor.herokuapp.com:8080", {
+const socket = io("https://my-collab-editor.herokuapp.com", {
   transports: ["websocket"],
   upgrade: false
 });

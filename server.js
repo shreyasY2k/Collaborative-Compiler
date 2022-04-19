@@ -20,6 +20,24 @@ db.once("open", () => {
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
 app.use(express.static(path.join("public")));
+
+const { createServer } = require("http");
+const { Server } = require("socket.io");
+const { instrument } = require("@socket.io/admin-ui");
+
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: ["https://admin.socket.io"],
+    credentials: true
+  }
+});
+instrument(io, {
+  auth: false
+});
+
+module.exports.io = io;
+
 // app.listen(3000);
 app.use("/", indexRouter);
 app.use("/user", userRouter);
