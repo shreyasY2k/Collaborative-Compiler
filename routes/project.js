@@ -73,7 +73,6 @@ router.post("/project/create", checkAuthenticated, (req, res) => {
   //get list of folders inside user folder local
   const userFolder = path.join(__dirname, "../", userid.toString());
   const userFolderList = fs.readdirSync(userFolder);
-  console.log(userFolderList);
   res.render("users/dashboard", {
     files: userFolderList,
     name: req.user.name
@@ -117,6 +116,7 @@ router.get("/project/download", checkAuthenticated, (req, res) => {
   });
 });
 io.on("connection", socket => {
+  console.log("user connected");
   socket.on("deleteFile", file => {
     if (
       fs.existsSync(
@@ -171,7 +171,6 @@ io.on("connection", socket => {
 
   //listen for renameFile event
   socket.on("renameFile", file => {
-    console.log("file rename");
     if (
       fs.existsSync(
         path.join(
