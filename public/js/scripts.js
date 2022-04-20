@@ -2,7 +2,7 @@ const socket = io( {
   transports: ["websocket"],
   upgrade: false
 });
-socket.emit("join");
+
 socket.on("disconnect", function () {
   socket.off("disconnect");
   socket.off("addFile");
@@ -32,12 +32,16 @@ function addFile() {
     .querySelector("#projectName")
     .innerText.toString()
     .trim();
+
+  var userid = document.querySelector("#userid").innerText.toString().trim();
   socket.emit("addFile", {
+    userid: userid,
     projectName: projectName,
     fileName: fileName,
     fileContent: ""
   });
 }
+
 socket.on("addFile", (projectName, fileName) => {
   var listGroup = document.querySelector(".list-group");
   var span = document.createElement("span");
@@ -94,7 +98,14 @@ function updateFileName(element) {
     .querySelector("#projectName")
     .innerText.toString()
     .trim();
+        var userid = document
+          .querySelector("#userid")
+          .innerText.toString()
+          .trim();
+
   socket.emit("renameFile", {
+    userid: userid,
+
     projectName: projectName,
     newFileName: fileName,
     oldFileName: element.parentElement.previousElementSibling.innerText
@@ -129,9 +140,11 @@ function deleteFile(element) {
       .querySelector("#projectName")
       .innerText.toString()
       .trim();
+    var userid = document.querySelector("#userid").innerText.toString().trim();
 
     //send delete file request to socket on server and then remove the file from the list
     socket.emit("deleteFile", {
+      userid: userid,
       projectName: projectName,
       fileName: fileName
     });
@@ -216,9 +229,10 @@ function getFile(element) {
     .querySelector("#projectName")
     .innerText.toString()
     .trim();
-
+userid = document.querySelector("#userid").innerText.toString().trim();
   //send request through socket to get the file content
   socket.emit("getFile", {
+    userid: userid,
     projectName: projectName,
     fileName: fileName
   });
@@ -330,8 +344,11 @@ function sendFileContent() {
     .querySelector("#projectName")
     .innerText.toString()
     .trim();
+    var userid = document.querySelector("#userid").innerText.toString().trim();
   var fileContent = editor.getValue();
   socket.emit("updateFile", {
+        userid: userid,
+
     projectName: projectName,
     fileName: fileName,
     fileContent: fileContent

@@ -116,24 +116,14 @@ router.get("/project/download", checkAuthenticated, (req, res) => {
     );
   });
 });
-var userid;
 io.on("connection", socket => {
-
-  console.log("a user connected");
-  //create a private room for each user
-  socket.on("join", () => {
-    userid = userid;
-    socket.join(userid);
-  });
-
-
   socket.on("deleteFile", file => {
     if (
       fs.existsSync(
         path.join(
           __dirname,
           "../",
-          userid.toString(),
+          file.userid.toString(),
           file.projectName,
           file.fileName
         )
@@ -143,13 +133,12 @@ io.on("connection", socket => {
         path.join(
           __dirname,
           "../",
-          userid.toString(),
+          file.userid.toString(),
           file.projectName,
           file.fileName
         )
       );
-      socket.to(userid).emit("deleteFile", file.projectName, file.fileName);
-      // socket.emit("deleteFile", file.projectName, file.fileName);
+      socket.emit("deleteFile", file.projectName, file.fileName);
     }
   });
 
@@ -160,7 +149,7 @@ io.on("connection", socket => {
         path.join(
           __dirname,
           "../",
-          userid.toString(),
+          file.userid.toString(),
           file.projectName,
           file.fileName
         )
@@ -170,14 +159,13 @@ io.on("connection", socket => {
         path.join(
           __dirname,
           "../",
-          userid.toString(),
+          file.userid.toString(),
           file.projectName,
           file.fileName
         ),
         file.fileContent
       );
-      socket.to(userid).emit("addFile", file.projectName, file.fileName);
-      // socket.emit("addFile", file.projectName, file.fileName);
+      socket.emit("addFile", file.projectName, file.fileName);
     }
   });
 
@@ -189,7 +177,7 @@ io.on("connection", socket => {
         path.join(
           __dirname,
           "../",
-          userid.toString(),
+          file.userid.toString(),
           file.projectName,
           file.oldFileName
         )
@@ -199,25 +187,24 @@ io.on("connection", socket => {
         path.join(
           __dirname,
           "../",
-          userid.toString(),
+          file.userid.toString(),
           file.projectName,
           file.oldFileName
         ),
         path.join(
           __dirname,
           "../",
-          userid.toString(),
+          file.userid.toString(),
           file.projectName,
           file.newFileName
         )
       );
-      socket.to(userid).emit("renameFile", file.projectName, file.oldFileName, file.newFileName);
-      // socket.emit(
-      //   "renameFile",
-      //   file.projectName,
-      //   file.oldFileName,
-      //   file.newFileName
-      // );
+      socket.emit(
+        "renameFile",
+        file.projectName,
+        file.oldFileName,
+        file.newFileName
+      );
     }
   });
 
@@ -226,14 +213,13 @@ io.on("connection", socket => {
       path.join(
         __dirname,
         "../",
-        userid.toString(),
+        file.userid.toString(),
         file.projectName,
         file.fileName
       ),
       file.fileContent
     );
-    socket.to(userid).emit("updateFile", file.projectName, file.fileName);
-    // socket.emit("updateFile", file.projectName, file.fileName);
+    socket.emit("updateFile", file.projectName, file.fileName);
   });
 
   socket.on("getFile", file => {
@@ -242,22 +228,17 @@ io.on("connection", socket => {
       path.join(
         __dirname,
         "../",
-        userid.toString(),
+        file.userid.toString(),
         file.projectName,
         file.fileName
       ),
       "utf8"
     );
-    socket.to(userid).emit("fileContent", {
+    socket.emit("fileContent", {
       projectName: file.projectName,
       fileName: file.fileName,
       fileContent: fileContent
     });
-    // socket.emit("fileContent", {
-    //   projectName: file.projectName,
-    //   fileName: file.fileName,
-    //   fileContent: fileContent
-    // });
   });
 
   socket.on("autoSuggest", file => {
@@ -271,10 +252,7 @@ io.on("connection", socket => {
       .then(res => res.json())
       .then(data => {
         //send response to client
-        socket
-          .to(userid)
-          .emit("autoSuggest", { data: data, lineNumber: file.lineNumber });
-        // socket.emit("autoSuggest", { data: data, lineNumber: file.lineNumber });
+        socket.emit("autoSuggest", { data: data, lineNumber: file.lineNumber });
       });
   });
   socket.on("compile", async file => {
@@ -289,8 +267,7 @@ io.on("connection", socket => {
         return response.json();
       })
       .then(data => {
-        socket.to(userid).emit("compileOutput", { output: data.output });
-        // socket.emit("compileOutput", { output: data.output });
+        socket.emit("compileOutput", { output: data.output });
       })
       .catch(error => alert(error.message));
   });
@@ -304,7 +281,6 @@ io.on("connection", socket => {
   });
 });
 router.get("/project/open", checkAuthenticated, async (req, res) => {
-  userid = req.user._id;
   const userId = req.user._id;
   const projectname = req.query.projectname;
 
@@ -316,6 +292,7 @@ router.get("/project/open", checkAuthenticated, async (req, res) => {
     .map(item => item.name);
 
   res.render("project/editor", {
+    userId: userId,
     files: fileList,
     projectname: projectname
   });
