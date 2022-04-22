@@ -1,18 +1,4 @@
-const socket = io( {
-  transports: ["websocket"],
-  upgrade: false
-});
-
-socket.on("disconnect", function () {
-  socket.off("disconnect");
-  socket.off("addFile");
-  socket.off("renameFile");
-  socket.off("deleteFile");
-  socket.off("getFile");
-  socket.off("fileContent");
-  removeEditor();
-});
-
+var socket;
 function addFile() {
   var fileName = document.querySelector("#fileName").value;
   if (!validateFileName(fileName)) {
@@ -42,18 +28,7 @@ function addFile() {
   });
 }
 
-socket.on("addFile", (projectName, fileName) => {
-  var listGroup = document.querySelector(".list-group");
-  var span = document.createElement("span");
-  span.setAttribute(
-    "class",
-    "list-group-item list-group-item-action list-group-item-light p-3"
-  );
-  span.innerHTML = `<i class="fa fa-lg fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${fileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
-  listGroup.appendChild(span);
-  document.querySelector("#fileName").value = "";
-  document.querySelector("#fileInputContainer").remove();
-});
+
 
 function editFileName(element) {
   if (!document.querySelector("#fileName")) {
@@ -114,22 +89,7 @@ function updateFileName(element) {
     listElement: element.parentElement.previousElementSibling.outerHTML
   });
 }
-socket.on("renameFile", (projectName, oldFileName, newFileName) => {
-  var oldFileName = oldFileName;
-  var projectName = projectName;
-  //remove the old filename from the file li containing the old name
-  var listGroup = document.querySelector(".list-group");
-  var span = document.createElement("span");
-  span.setAttribute(
-    "class",
-    "list-group-item list-group-item-action list-group-item-light p-3"
-  );
-  span.innerHTML = `<i class="fa fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${newFileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
-  listGroup.appendChild(span);
-  document.querySelector("#fileName").value = "";
-  document.querySelector("#fileInputContainer").remove();
-  deleteFileFromList(oldFileName);
-});
+
 
 function deleteFile(element) {
   if (!document.querySelector("#fileName")) {
@@ -150,9 +110,7 @@ function deleteFile(element) {
     });
   }
 }
-socket.on("deleteFile", (projectName, fileName) => {
-  deleteFileFromList(fileName);
-});
+
 
 //deleteFile function
 function deleteFileFromList(fileName) {
@@ -168,6 +126,44 @@ function deleteFileFromList(fileName) {
 }
 
 window.addEventListener("DOMContentLoaded", event => {
+   socket = io({
+    transports: ["websocket"],
+    upgrade: false
+  });
+  socket.emit("join", {
+    userid: document.querySelector("#userid").innerText.toString().trim()
+  });
+  socket.on("addFile", (projectName, fileName) => {
+    var listGroup = document.querySelector(".list-group");
+    var span = document.createElement("span");
+    span.setAttribute(
+      "class",
+      "list-group-item list-group-item-action list-group-item-light p-3"
+    );
+    span.innerHTML = `<i class="fa fa-lg fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${fileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
+    listGroup.appendChild(span);
+    document.querySelector("#fileName").value = "";
+    document.querySelector("#fileInputContainer").remove();
+  });
+  socket.on("renameFile", (projectName, oldFileName, newFileName) => {
+    var oldFileName = oldFileName;
+    var projectName = projectName;
+    //remove the old filename from the file li containing the old name
+    var listGroup = document.querySelector(".list-group");
+    var span = document.createElement("span");
+    span.setAttribute(
+      "class",
+      "list-group-item list-group-item-action list-group-item-light p-3"
+    );
+    span.innerHTML = `<i class="fa fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${newFileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
+    listGroup.appendChild(span);
+    document.querySelector("#fileName").value = "";
+    document.querySelector("#fileInputContainer").remove();
+    deleteFileFromList(oldFileName);
+  });
+  socket.on("deleteFile", (projectName, fileName) => {
+    deleteFileFromList(fileName);
+  });
   const sidebarToggle = document.body.querySelector("#sidebarToggle");
   if (sidebarToggle) {
     sidebarToggle.addEventListener("click", event => {
@@ -196,55 +192,6 @@ window.addEventListener("DOMContentLoaded", event => {
   document.querySelector("#compile").addEventListener("click", e => {
     compileIt();
   });
-});
-
-function validateFileName(fileName) {
-  const fileNameRegex = /^[\w,\s-]+\.[A-Za-z]{1,6}$/;
-  if (
-    fileName.length > 0 &&
-    fileName.length <= 50 &&
-    fileNameRegex.test(fileName)
-  ) {
-    return true;
-  }
-  return false;
-}
-
-function checkAlreadyExists(fileName) {
-  const fileList = document.querySelector(".list-group").children;
-  for (let i = 0; i < fileList.length; i++) {
-    if (fileList[i].innerText.trim() === fileName) {
-      return true;
-    }
-  }
-  return false;
-}
-function cancel() {
-  document.querySelector("#fileInputContainer").remove();
-}
-
-function getFile(element) {
-  var fileName = element.innerText.toString().trim();
-  var projectName = document
-    .querySelector("#projectName")
-    .innerText.toString()
-    .trim();
-userid = document.querySelector("#userid").innerText.toString().trim();
-  //send request through socket to get the file content
-  socket.emit("getFile", {
-    userid: userid,
-    projectName: projectName,
-    fileName: fileName
-  });
-}
-var editor;
-function removeEditor() {
-  if (editor) {
-    document.querySelector("#editor").innerHTML = "";
-    document.querySelector("#editor").remove();
-    editor.getModel().dispose();
-  }
-}
 socket.on("fileContent", function (data) {
   var fileContent = data.fileContent;
   var fileName = data.fileName;
@@ -328,6 +275,64 @@ socket.on("autoSuggest", function (data) {
     editor.setPosition(cursorPosition);
   }
 });
+socket.on("compileOutput", function (data) {
+  document.getElementById("opscreen").style.visibility = "visible";
+  document.getElementById("output").innerHTML = data.output;
+});
+
+// socket.on("disconnect", function () {
+//   removeEditor();
+// });
+});
+
+function validateFileName(fileName) {
+  const fileNameRegex = /^[\w,\s-]+\.[A-Za-z]{1,6}$/;
+  if (
+    fileName.length > 0 &&
+    fileName.length <= 50 &&
+    fileNameRegex.test(fileName)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function checkAlreadyExists(fileName) {
+  const fileList = document.querySelector(".list-group").children;
+  for (let i = 0; i < fileList.length; i++) {
+    if (fileList[i].innerText.trim() === fileName) {
+      return true;
+    }
+  }
+  return false;
+}
+function cancel() {
+  document.querySelector("#fileInputContainer").remove();
+}
+
+function getFile(element) {
+  var fileName = element.innerText.toString().trim();
+  var projectName = document
+    .querySelector("#projectName")
+    .innerText.toString()
+    .trim();
+userid = document.querySelector("#userid").innerText.toString().trim();
+  //send request through socket to get the file content
+  socket.emit("getFile", {
+    userid: userid,
+    projectName: projectName,
+    fileName: fileName
+  });
+}
+var editor;
+function removeEditor() {
+  if (editor) {
+    document.querySelector("#editor").innerHTML = "";
+    document.querySelector("#editor").remove();
+    editor.getModel().dispose();
+  }
+}
+
 
 //on every key press in editor, send the content to the server with the file name and project name
 function sendFileContent() {
@@ -368,7 +373,3 @@ function compileIt() {
     })
   });
 }
-socket.on("compileOutput", function (data) {
-  document.getElementById("opscreen").style.visibility = "visible";
-  document.getElementById("output").innerHTML = data.output;
-});

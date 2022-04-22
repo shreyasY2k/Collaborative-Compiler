@@ -42,6 +42,7 @@ const path = require("path");
 const AWS = require("aws-sdk");
 const fs = require("fs");
 const fetch = require("node-fetch");
+const { log } = require("console");
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
@@ -117,13 +118,19 @@ router.get("/project/download", checkAuthenticated, (req, res) => {
 });
 io.on("connection", socket => {
   console.log("user connected");
+  socket.on("join", data => {
+    socket.join(data.userid);
+    socket.uid = data.userid;
+  });
+
   socket.on("deleteFile", file => {
+    console.log(socket.uid);
     if (
       fs.existsSync(
         path.join(
           __dirname,
           "../",
-          file.userid.toString(),
+          socket.uid.toString(),
           file.projectName,
           file.fileName
         )
@@ -133,7 +140,7 @@ io.on("connection", socket => {
         path.join(
           __dirname,
           "../",
-          file.userid.toString(),
+          socket.uid.toString(),
           file.projectName,
           file.fileName
         )
@@ -149,7 +156,7 @@ io.on("connection", socket => {
         path.join(
           __dirname,
           "../",
-          file.userid.toString(),
+          socket.uid.toString(),
           file.projectName,
           file.fileName
         )
@@ -159,7 +166,7 @@ io.on("connection", socket => {
         path.join(
           __dirname,
           "../",
-          file.userid.toString(),
+          socket.uid.toString(),
           file.projectName,
           file.fileName
         ),
@@ -171,12 +178,13 @@ io.on("connection", socket => {
 
   //listen for renameFile event
   socket.on("renameFile", file => {
+    console.log(socket.id);
     if (
       fs.existsSync(
         path.join(
           __dirname,
           "../",
-          file.userid.toString(),
+          socket.uid.toString(),
           file.projectName,
           file.oldFileName
         )
@@ -186,14 +194,14 @@ io.on("connection", socket => {
         path.join(
           __dirname,
           "../",
-          file.userid.toString(),
+          socket.uid.toString(),
           file.projectName,
           file.oldFileName
         ),
         path.join(
           __dirname,
           "../",
-          file.userid.toString(),
+          socket.uid.toString(),
           file.projectName,
           file.newFileName
         )
@@ -212,7 +220,7 @@ io.on("connection", socket => {
       path.join(
         __dirname,
         "../",
-        file.userid.toString(),
+        socket.uid.toString(),
         file.projectName,
         file.fileName
       ),
@@ -227,7 +235,7 @@ io.on("connection", socket => {
       path.join(
         __dirname,
         "../",
-        file.userid.toString(),
+        socket.uid.toString(),
         file.projectName,
         file.fileName
       ),
@@ -274,9 +282,6 @@ io.on("connection", socket => {
   socket.on("disconnect", () => {
     //destroy socket connection
     console.log("user disconnected");
-    socket.removeAllListeners();
-    socket.leave(socket.id);
-    socket.disconnect();
   });
 });
 router.get("/project/open", checkAuthenticated, async (req, res) => {

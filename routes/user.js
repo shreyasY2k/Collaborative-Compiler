@@ -45,6 +45,17 @@ router.get("/register", checkNotAuthenticated, (req, res) => {
 
 router.get("/dashboard", checkAuthenticated, (req, res) => {
   const userId = req.user._id;
+  //if user folder exists
+  if (fs.existsSync(path.join(__dirname, "../", userId.toString()))) {
+    //get list of folders inside user folder local
+    console.log("user folder exists");
+    const userFolder = path.join(__dirname, "../", userId.toString());
+    const userFolderList = fs.readdirSync(userFolder);
+    res.render("users/dashboard", {
+      files: userFolderList,
+      name: req.user.name
+    });
+  } else {
   fs.mkdirSync(path.join(__dirname, "../", userId.toString()), {
     recursive: true
   });
@@ -119,7 +130,7 @@ router.get("/dashboard", checkAuthenticated, (req, res) => {
       }
     }
   );
-});
+}});
 
 router.post("/logout", (req, res) => {
   //upload user folder to s3 sync
