@@ -19,12 +19,13 @@ AWS.config.update({
 var s3 = new AWS.S3();
 router.use(express.urlencoded({ extended: false }));
 router.use(flash());
+const sessionMiddleware = session({
+  secret: process.env.SECRET,
+  resave: false,
+  saveUninitialized: false
+});
 router.use(
-  session({
-    secret: process.env.SECRET,
-    resave: false,
-    saveUninitialized: false
-  })
+  sessionMiddleware
 );
 router.use(express.static(path.join(__dirname, "../", "public")));
 
@@ -34,6 +35,14 @@ initializePassport(passport);
 router.get("/", (req, res) => {
   res.render("index");
 });
+
+// convert a connect middleware to a Socket.IO middleware
+const wrap = middleware => (socket, next) =>
+  middleware(socket.request, {}, next);
+
+io.use(wrap(sessionMiddleware));
+io.use(wrap(passport.initialize()));
+io.use(wrap(passport.session()));
 
 router.get("/login", checkNotAuthenticated, (req, res) => {
   res.render("users/login", { message: "" });

@@ -3,8 +3,9 @@ if (process.env.NODE_ENV != "production") {
 }
 const express = require("express");
 const app = express();
-const http = require("http").Server(app);
-global.io = require("socket.io")(http);
+const server = require("http").createServer(app);
+const port = process.env.PORT || 3000;
+global.io = require("socket.io")(server);
 const path = require("path");
 const indexRouter = require("./routes/index");
 const userRouter = require("./routes/user");
@@ -27,8 +28,7 @@ app.use(express.static(path.join("public")));
 app.use("/", indexRouter);
 app.use("/user", userRouter);
 app.use("/user", projectRouter);
-http.listen(process.env.PORT || 3000, () => {
-  console.log("listening on *:3000");
+server.listen(port, () => {
+  console.log(`application is running at: http://localhost:${port}`);
 });
-
 // app.listen(process.env.PORT || 3000);

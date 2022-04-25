@@ -42,27 +42,40 @@ const path = require("path");
 const AWS = require("aws-sdk");
 const fs = require("fs");
 const fetch = require("node-fetch");
-const { log } = require("console");
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 });
 var s3 = new AWS.S3();
 router.use(express.urlencoded({ extended: false }));
+const sessionMiddleware = session({
+  secret: process.env.SECRET,
+  resave: false,
+  saveUninitialized: false
+});
 router.use(flash());
-router.use(
-  session({
-    secret: process.env.SECRET,
-    resave: false,
-    saveUninitialized: false
-  })
-);
+router.use(sessionMiddleware);
 router.use(express.static(path.join(__dirname, "../", "public")));
 
 router.use(passport.initialize());
 router.use(passport.session());
 initializePassport(passport);
+// convert a connect middleware to a Socket.IO middleware
+// const wrap = middleware => (socket, next) =>
+//   middleware(socket.request, {}, next);
 
+// io.use(wrap(sessionMiddleware));
+// io.use(wrap(passport.initialize()));
+// io.use(wrap(passport.session()));
+
+io.use((socket, next) => {
+  if (socket.request.user) {
+    console.log(socket.request.user);
+    next();
+  } else {
+    next(new Error("unauthorized"));
+  }
+});
 router.post("/project/create", checkAuthenticated, (req, res) => {
   //create folder for project inside user folder
   const userid = req.user._id;
@@ -116,174 +129,11 @@ router.get("/project/download", checkAuthenticated, (req, res) => {
     );
   });
 });
-io.on("connection", socket => {
-  console.log("user connected");
-  socket.on("join", data => {
-    socket.join(data.userid);
-    socket.uid = data.userid;
-  });
-
-  socket.on("deleteFile", file => {
-    console.log(socket.uid);
-    if (
-      fs.existsSync(
-        path.join(
-          __dirname,
-          "../",
-          socket.uid.toString(),
-          file.projectName,
-          file.fileName
-        )
-      )
-    ) {
-      fs.unlinkSync(
-        path.join(
-          __dirname,
-          "../",
-          socket.uid.toString(),
-          file.projectName,
-          file.fileName
-        )
-      );
-      socket.emit("deleteFile", file.projectName, file.fileName);
-    }
-  });
-
-  //listen for addFile event
-  socket.on("addFile", file => {
-    if (
-      !fs.existsSync(
-        path.join(
-          __dirname,
-          "../",
-          socket.uid.toString(),
-          file.projectName,
-          file.fileName
-        )
-      )
-    ) {
-      fs.writeFileSync(
-        path.join(
-          __dirname,
-          "../",
-          socket.uid.toString(),
-          file.projectName,
-          file.fileName
-        ),
-        file.fileContent
-      );
-      socket.emit("addFile", file.projectName, file.fileName);
-    }
-  });
-
-  //listen for renameFile event
-  socket.on("renameFile", file => {
-    console.log(socket.id);
-    if (
-      fs.existsSync(
-        path.join(
-          __dirname,
-          "../",
-          socket.uid.toString(),
-          file.projectName,
-          file.oldFileName
-        )
-      )
-    ) {
-      fs.renameSync(
-        path.join(
-          __dirname,
-          "../",
-          socket.uid.toString(),
-          file.projectName,
-          file.oldFileName
-        ),
-        path.join(
-          __dirname,
-          "../",
-          socket.uid.toString(),
-          file.projectName,
-          file.newFileName
-        )
-      );
-      socket.emit(
-        "renameFile",
-        file.projectName,
-        file.oldFileName,
-        file.newFileName
-      );
-    }
-  });
-
-  socket.on("updateFile", file => {
-    fs.writeFileSync(
-      path.join(
-        __dirname,
-        "../",
-        socket.uid.toString(),
-        file.projectName,
-        file.fileName
-      ),
-      file.fileContent
-    );
-    socket.emit("updateFile", file.projectName, file.fileName);
-  });
-
-  socket.on("getFile", file => {
-    //get file content
-    const fileContent = fs.readFileSync(
-      path.join(
-        __dirname,
-        "../",
-        socket.uid.toString(),
-        file.projectName,
-        file.fileName
-      ),
-      "utf8"
-    );
-    socket.emit("fileContent", {
-      projectName: file.projectName,
-      fileName: file.fileName,
-      fileContent: fileContent
-    });
-  });
-
-  socket.on("autoSuggest", file => {
-    var question = file.lineContent;
-    //fetch request to codegrepper
-    fetch(
-      "https://www.codegrepper.com/api/search.php?q=" +
-        question +
-        "&search_options=search_titles"
-    )
-      .then(res => res.json())
-      .then(data => {
-        //send response to client
-        socket.emit("autoSuggest", { data: data, lineNumber: file.lineNumber });
-      });
-  });
-  socket.on("compile", async file => {
-    await fetch("https://codeorbored.herokuapp.com", {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain"
-      },
-      body: file.body
-    })
-      .then(response => {
-        return response.json();
-      })
-      .then(data => {
-        socket.emit("compileOutput", { output: data.output });
-      })
-      .catch(error => alert(error.message));
-  });
-
-  socket.on("disconnect", () => {
-    //destroy socket connection
-    console.log("user disconnected");
-  });
-});
+io.on('connect', (socket) => {
+  console.log(`new connection ${socket.id}`);
+  socket.on('whoami', (cb) => {
+    cb(socket.request.user ? socket.request.user.name : '');
+  });})
 router.get("/project/open", checkAuthenticated, async (req, res) => {
   const userId = req.user._id;
   const projectname = req.query.projectname;
