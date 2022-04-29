@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/js/languages.js"></script>
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <link rel="stylesheet" data-name="vs/editor/editor.main" href="/package/min/vs/editor/editor.main.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/script.js"></script>
+    <script>
+        var require = {
+            paths: {
+                vs: "/package/min/vs"
+            }
+        };
+    </script>
+    <script src="/package/min/vs/loader.js"></script>
+    <script src="/package/min/vs/editor/editor.main.nls.js"></script>
+    <script src="/package/min/vs/editor/editor.main.js"></script>
+    <link href="/css/styles.css" rel="stylesheet" />
+
+</head>
+
+<body onload="addlist()">
+    <div id="socketID" style="display: none;">
+        <%= socketID %>
+    </div>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar-->
+        <div class="border-end bg-dark" id="sidebar-wrapper">
+            <div class="sidebar-heading bg-dark border-bottom color-white"><i class="fa fa-lg fa-folder"></i>&nbsp;
+                <span id="projectName"><%= projectname %></span>&nbsp;<a id="createFile"><i class="fa fa-plus"></i></a></div>
+            <div class="list-group list-group-flush">
+                <% for (var i = 0; i < files.length; i++) { %>
+                    <span class="list-group-item list-group-item-action list-group-item-light p-3">
+                        <i class="fa fa-file-code"></i>&nbsp;&nbsp;
+                        <a onclick="getFile(this);" class="justify-content-between">
+                            <%= files[i] %>&nbsp;&nbsp;
+                        </a>
+                        <a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)"><i class="fa fa-trash"></i></span></a>
+                    </span>
+                    <% } %>
+            </div>
+        </div>
+        <!-- Page content wrapper-->
+        <div id="page-content-wrapper">
+            <!-- Top navigation-->
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
+                <div class="container-fluid">
+                    <a id="sidebarToggle"><i class="fa fa-lg fa-code"></i></a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
+                            <li class="nav-item px-lg-1 py-1 py-lg-0"><a class="btn btn-outline-danger" href="/user/dashboard">Back</a></li>
+                            <li class="nav-item px-lg-1 py-1 py-lg-0"><a class="btn btn-outline-success" href="#!">Start Collaboration Session</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            <!-- Page content-->
+            <div id="editordiv" class="container-fluid row p-4">
+                <!-- <p class="col-lg-9" id="editor" style="width: 700px;height: 580px;">
+                </p> -->
+                <div style="margin-left: 25px;" id="compiler" class="compiler col d-none">
+                    <select id="dropdown-language" class="dropdown m-2 mt-4">
+                  </select>
+                    <div class="input-group mb-3 mt-4">
+                        <input type="text" id="stdin" class="form-control m-2" placeholder="Inputs seperated by '|'" aria-label="Recipient's username" aria-describedby="button-addon2">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-success m-2" type="button" id="compile">Run</button>
+                        </div>
+                    </div>
+                    <div class="output p-3">
+                        <div class="fakeScreen " id="opscreen" style="visibility: hidden; color: floralwhite;">
+                            <p class="line1">Output<span class="cursor1">_</span></p>
+                            <p class="line4">&gt;<span id="output" class="cursor4"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>
