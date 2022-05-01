@@ -130,12 +130,7 @@ router.get("/project/download", checkAuthenticated, (req, res) => {
     );
   });
 });
-var usersSocket={
-  users:[],
-  projectPath:'',
-  userID:'',
-  socketID:''
-}
+var userSockets=[]
 io.on('connection', (socket) => {
   //create room for project and get project name form socket query
   // console.log("user connected");
@@ -147,37 +142,33 @@ io.on('connection', (socket) => {
     userid.toString(),
     projectname.toString()
   );
-  // console.log(projectname);
-  socket.join(projectPath);
-  usersSocket.users.push(socket.id);
-  usersSocket.projectPath = projectPath;
-  usersSocket.userID = userid;
-  usersSocket.socketID = socket.id;
-  console.log(usersSocket);
-  // console.log(socket.rooms);
-  io.sockets.in(projectPath).emit('roomConnected', socket.request.user._id.toString() + "/" + projectname);
+  userSockets.push({
+    projectPath:projectPath,
+    userID:userid.toString(),
+    socketID:socket.id
+  });
+  socket.join(socket.id);
+  // console.log(socket.id);
+  socket.emit("roomConnected", socket.id);
+  // console.log(userSockets);
 
 socket.on("deleteFile", file => {
-  // console.log(projectPath);
-  // var pp = path.join(projectPath, file.fileName);
-  // console.log(pp);
-  if (
-    fs.existsSync(
-      path.join("625ea363d882d34d42aba3cd" + "/", "A", file.fileName)
-    )
-  ) {
-    fs.unlinkSync(
-      path.join("625ea363d882d34d42aba3cd" + "/", "A", file.fileName)
-    );
-    //emit to all users in room
-    io.sockets
-      .in(usersSocket.socketID)
-      .emit("deleteFile", file.projectName, file.fileName);
-    // socket.emit("deleteFile", file.projectName, file.fileName);
+  var roomId = Object.keys(io.sockets.adapter.rooms);
+  console.log(roomId);
+  var userSocket = userSockets.find(userSocket => userSocket.socketID !== socket.id);
+  console.log(userSocket,157);
+  console.log(io.sockets.adapter.rooms);
+  if (fs.existsSync(path.join(userSocket.projectPath, file.fileName))) {
+    fs.unlinkSync(path.join(userSocket.projectPath, file.fileName));
+    //send deleteFile event to all users in with socket id userSocket.socketID
+    io.to(userSocket.socketID).emit("deleteFile", file.fileName);
   }
 });
 socket.on("join", (socketID) => {
-  socket.join(socketID);
+  var userSocket = userSockets.find(userSocket => userSocket.socketID === socketID.socketID);
+  socket.join(userSocket.socketID);
+  // socket.join(socketID);
+  // console.log(userSockets);
 })
 //listen for addFile event
 socket.on("addFile", file => {
@@ -316,24 +307,16 @@ router.get("/project/open", checkAuthenticated, async (req, res) => {
 });
 
 router.post("/project/joinRoom",(req,res)=>{
-  var projectPath = req.body.roomID;
-  //find usersSocket which has the same projectPath
-  console.log(usersSocket);
-  // var userSocket = usersSocket.values.find(
-  //   item => item.projectPath === projectPath
-  // );
-  // //get socket id from usersSocket
-  // console.log(userSocket);
-  var socketID = usersSocket.socketID;
+  var roomID = req.body.roomID;
+  // console.log(userSockets);
+  var socketID = userSockets.find(userSocket => userSocket.socketID === roomID);
+  // console.log(socketID.projectPath.toString().split("\\"));
   //read files from projectPath
-  var fileList = fs
-    .readdirSync(path.join(__dirname, "../", projectPath), {
-    })
-
+  var fileList = fs.readdirSync(socketID.projectPath);
   res.render("project/editor", {
     files: fileList,
-    projectname: projectPath.split("/")[1],
-    socketID: socketID
+    projectname: socketID.projectPath.split("\\")[6],
+    socketID: socketID.socketID
   });
 })
 

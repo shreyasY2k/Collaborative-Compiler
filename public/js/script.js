@@ -113,6 +113,7 @@ function deleteFileFromList(fileName) {
 
 window.addEventListener("DOMContentLoaded", event => {
   var socketID = document.querySelector("#socketID").innerText.toString().trim();
+  console.log(socketID);
   if (socketID) {
     console.log("socket id exists");
     socket = io.connect("http://localhost:3000", {
@@ -126,13 +127,13 @@ window.addEventListener("DOMContentLoaded", event => {
       });
     });
   }
-  else socket = io({
+  else {socket = io({
     transports: ["websocket"],
     upgrade: false,
     query: {
       projectname: document.querySelector("#projectName").innerText.toString().trim()
     }
-  });
+  });}
   socket.on("roomConnected", function (data) {
     console.log("roomConnected",data);
   });
@@ -165,7 +166,8 @@ window.addEventListener("DOMContentLoaded", event => {
     document.querySelector("#fileInputContainer").remove();}
     deleteFileFromList(oldFileName);
   });
-  socket.on("deleteFile", (projectName, fileName) => {
+  socket.on("deleteFile", (fileName) => {
+    console.log('deletefile');
     deleteFileFromList(fileName);
   });
   const sidebarToggle = document.body.querySelector("#sidebarToggle");
