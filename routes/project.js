@@ -148,52 +148,42 @@ io.on('connection', (socket) => {
     socketID:socket.id
   });
   socket.join(socket.id);
-  // console.log(socket.id);
   socket.emit("roomConnected", socket.id);
-  // console.log(userSockets);
+  socket.emit("path", {projectPath:projectPath,id:socket.id});
 
 socket.on("deleteFile", file => {
-  var roomId = Object.keys(io.sockets.adapter.rooms);
-  console.log(roomId);
-  var userSocket = userSockets.find(userSocket => userSocket.socketID !== socket.id);
-  console.log(userSocket,157);
-  console.log(io.sockets.adapter.rooms);
-  if (fs.existsSync(path.join(userSocket.projectPath, file.fileName))) {
-    fs.unlinkSync(path.join(userSocket.projectPath, file.fileName));
-    //send deleteFile event to all users in with socket id userSocket.socketID
-    io.to(userSocket.socketID).emit("deleteFile", file.fileName);
+  // console.log(file);
+  // var userSocket = userSockets.find(userSocket => userSocket.socketID === socket.id);
+  // console.log(userSocket);
+  if (fs.existsSync(path.join(file.projectPath, file.fileName))) {
+    fs.unlinkSync(path.join(file.projectPath, file.fileName));
+    io.to(file.id).emit("deleteFile", file.fileName);
   }
 });
 socket.on("join", (socketID) => {
   var userSocket = userSockets.find(userSocket => userSocket.socketID === socketID.socketID);
+  // console.log(userSocket,162);
   socket.join(userSocket.socketID);
-  // socket.join(socketID);
-  // console.log(userSockets);
+  socket.emit("path", { projectPath: userSocket.projectPath, id: userSocket.socketID });
 })
 //listen for addFile event
 socket.on("addFile", file => {
   if (
     !fs.existsSync(
       path.join(
-        __dirname,
-        "../",
-        socket.request.user._id.toString(),
-        file.projectName,
+        file.projectPath,
         file.fileName
       )
     )
   ) {
     fs.writeFileSync(
       path.join(
-        __dirname,
-        "../",
-        socket.request.user._id.toString(),
-        file.projectName,
+        file.projectPath,
         file.fileName
       ),
       file.fileContent
     );
-    socket.emit("addFile", file.projectName, file.fileName);
+    io.to(file.id).emit("addFile", file.fileName);
   }
 });
 
@@ -202,38 +192,33 @@ socket.on("renameFile", file => {
   if (
     fs.existsSync(
       path.join(
-        __dirname,
-        "../",
-        socket.request.user._id.toString(),
-        file.projectName,
+        file.projectPath,
         file.oldFileName
       )
     )
   ) {
     fs.renameSync(
-      path.join(
-        projectPath,
-        file.oldFileName
-      ),
-      path.join(
-       projectPath,
-        file.newFileName
-      )
+      path.join(file.projectPath, file.oldFileName),
+      path.join(file.projectPath, file.newFileName)
     );
-    socket
-      .emit("renameFile", file.projectName, file.oldFileName, file.newFileName);
+    io.to(file.id).emit(
+      "renameFile",
+      file.projectName,
+      file.oldFileName,
+      file.newFileName
+    );
   }
 });
 
 socket.on("updateFile", file => {
   fs.writeFileSync(
     path.join(
-      projectPath,
+      file.projectPath,
       file.fileName
     ),
     file.fileContent
   );
-  socket
+  io.to(file.id)
     .emit("updateFile", file.projectName, file.fileName, file.fileContent);
 });
 
@@ -241,12 +226,12 @@ socket.on("getFile", file => {
   //get file content
   const fileContent = fs.readFileSync(
     path.join(
-      projectPath,
+      file.projectPath,
       file.fileName
     ),
     "utf8"
   );
-  socket.emit("fileContent", {
+  io.to(file.id).emit("fileContent", {
       projectName: file.projectName,
       fileName: file.fileName,
       fileContent: fileContent
@@ -306,12 +291,9 @@ router.get("/project/open", checkAuthenticated, async (req, res) => {
   });
 });
 
-router.post("/project/joinRoom",(req,res)=>{
+router.post("/project/joinRoom",checkAuthenticated,(req,res)=>{
   var roomID = req.body.roomID;
-  // console.log(userSockets);
   var socketID = userSockets.find(userSocket => userSocket.socketID === roomID);
-  // console.log(socketID.projectPath.toString().split("\\"));
-  //read files from projectPath
   var fileList = fs.readdirSync(socketID.projectPath);
   res.render("project/editor", {
     files: fileList,
