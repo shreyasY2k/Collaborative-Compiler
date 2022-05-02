@@ -156,7 +156,7 @@ window.addEventListener("DOMContentLoaded", event => {
     );
     span.innerHTML = `<i class="fa fa-lg fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${fileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
     listGroup.appendChild(span);
-    if(!document.querySelector("#fileName")){
+    if(document.querySelector("#fileName")){
     document.querySelector("#fileName").value = "";
     document.querySelector("#fileInputContainer").remove();
   }
