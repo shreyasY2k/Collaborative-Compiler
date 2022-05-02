@@ -24,11 +24,9 @@ db.once("open", () => {
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
 app.use(express.static(path.join("public")));
-// app.listen(3000);
 app.use("/", indexRouter);
 app.use("/user", userRouter);
 app.use("/user", projectRouter);
 server.listen(port, () => {
   console.log(`application is running at: http://localhost:${port}`);
 });
-// app.listen(process.env.PORT || 3000);
