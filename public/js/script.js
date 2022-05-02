@@ -122,7 +122,7 @@ function deleteFileFromList(fileName) {
 window.addEventListener("DOMContentLoaded", event => {
   var socketID = document.querySelector("#socketID").innerText.toString().trim();
   if (socketID) {
-    socket = io.connect("http://localhost:3000", {
+    socket = io.connect( {
       query: {
         projectname: document.querySelector("#projectName").innerText.toString(),
         }
