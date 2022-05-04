@@ -1,6 +1,19 @@
 if (process.env.NODE_ENV != "production") {
   require("dotenv").config();
 }
+async function findProjectRoom(id, projectName) {
+  const userProjects = await userProjectsFilesRooms.findOne({
+    userID: id,
+    projectPath: path.join(__dirname, "../", id.toString() + "/" + projectName)
+  });
+  return userProjects;
+}
+async function findProjectRoomById(id) {
+  const userProjects = await userProjectsFilesRooms.findOne({
+    roomID: id
+  });
+  return userProjects;
+}
 async function deleteProject(bucket, dir) {
   const listParams = {
     Bucket: bucket,
@@ -42,6 +55,7 @@ const path = require("path");
 const AWS = require("aws-sdk");
 const fs = require("fs");
 const fetch = require("node-fetch");
+const userProjectsFilesRooms = require("../models/userProjectsFilesRooms");
 const { request } = require("http");
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -70,7 +84,6 @@ io.use((socket, next) => {
     next(new Error("unauthorized"));
   }
 });
-var userProjectRooms=[]
 router.post("/project/create", checkAuthenticated, (req, res) => {
   //create folder for project inside user folder
   const userid = req.user._id;
@@ -81,15 +94,35 @@ router.post("/project/create", checkAuthenticated, (req, res) => {
   );
   //create a unique room if for the project and add it to folder array
   const room = Math.random().toString(36).substring(7);
-  userProjectRooms.push({
-    userID: req.user._id.toString(),
+  //add these to the database
+  const userProjectsFilesRoomsSchema = new userProjectsFilesRooms({
+    userId: userid,
+    roomID: room,
     projectPath: path.join(
       __dirname,
       "../",
       userid.toString() + "/" + projectname
     ),
-    roomID: room
+    files: []
   });
+  userProjectsFilesRoomsSchema.save();
+
+  //insert to userProjectsFilesRooms
+  // userProjectsFilesRooms.insertOne({
+  //   userId: userid,
+  //   roomID: room,
+  //   projectPath: path.join(__dirname, "../", userid.toString() + "/" + projectname),
+  //   files: []
+  // });
+  // userProjectRooms.push({
+  //   userID: req.user._id.toString(),
+  //   projectPath: path.join(
+  //     __dirname,
+  //     "../",
+  //     userid.toString() + "/" + projectname
+  //   ),
+  //   roomID: room
+  // });
   //get list of folders inside user folder local
   const userFolder = path.join(__dirname, "../", userid.toString());
   const userFolderList = fs.readdirSync(userFolder);
@@ -135,7 +168,6 @@ router.get("/project/download", checkAuthenticated, (req, res) => {
     );
   });
 });
-var userSockets=[]
 io.on('connection', (socket) => {
 
 socket.on("deleteFile", file => {
@@ -144,10 +176,8 @@ socket.on("deleteFile", file => {
     io.to(file.id).emit("deleteFile", file.fileName);
   }
 });
-socket.on("join", (socketID) => {
-  var userPRooms = userProjectRooms.find(
-    userSocket => userSocket.roomID === socketID.socketID
-  );
+socket.on("join", async (socketID) => {
+  var userPRooms = await findProjectRoomById(socketID.socketID);
   console.log(userPRooms);
   // console.log(userSocket,162);
   socket.join(userPRooms.roomID);
@@ -157,7 +187,7 @@ socket.on("join", (socketID) => {
   });
 })
 //listen for addFile event
-socket.on("addFile", file => {
+socket.on("addFile", async file => {
   if (
     !fs.existsSync(
       path.join(
@@ -166,6 +196,14 @@ socket.on("addFile", file => {
       )
     )
   ) {
+    //generate a unique id for the file and add it to the database
+    const fileId = Math.random().toString(36).substring(7);
+    //add filename:fileId to the database where roomID is the roomID of the project
+    const query  = userProjectsFilesRooms.updateOne(
+      { roomID: file.id },
+      { $push: { files: { $each: [{ fileName: file.fileName, fileRoom:fileId }] } } }
+    );
+    await query.exec();
     fs.writeFileSync(
       path.join(
         file.projectPath,
@@ -212,7 +250,7 @@ socket.on("updateFile", file => {
     .emit("updateFile", file.projectName, file.fileName, file.fileContent);
 });
 
-socket.on("getFile", file => {
+socket.on("getFile", async file => {
   //get file content
   const fileContent = fs.readFileSync(
     path.join(
@@ -221,11 +259,19 @@ socket.on("getFile", file => {
     ),
     "utf8"
   );
-  io.to(file.id).emit("fileContent", {
-      projectName: file.projectName,
-      fileName: file.fileName,
-      fileContent: fileContent
-    });
+  //search for file in database and get fileId
+  const query = userProjectsFilesRooms.findOne({
+    roomID: file.id,
+    files: { $elemMatch: { fileName: file.fileName } }
+  });
+  //join the room
+  const fileId = await query.exec();
+  socket.join(fileId.fileRoom);
+  io.to(fileId.fileRoom).emit("fileContent", {
+    projectName: file.projectName,
+    fileName: file.fileName,
+    fileContent: fileContent
+  });
 });
 
 socket.on("autoSuggest", file => {
@@ -262,38 +308,34 @@ socket.on("compile", async file => {
   socket.on('disconnect', () => {
   });
 })
+
 router.get("/project/open", checkAuthenticated, async (req, res) => {
   const userId = req.user._id;
   const projectname = req.query.projectname;
-console.log(userProjectRooms);
+  const projectRoom = await findProjectRoom(userId, projectname);
   var fileList = fs
-    .readdirSync(path.join(__dirname, "../", userId + "/" + projectname), {
+    .readdirSync(path.join(__dirname, "../", userId.toString() + "/" + projectname), {
       withFileTypes: true
     })
     .filter(item => !item.isDirectory())
     .map(item => item.name);
-    var projectSocket = userProjectRooms.find(
-      id =>
-        id.userID === userId.toString() &&
-        id.projectPath ===
-          path.join(__dirname, "../", userId.toString() + "/" + projectname)
-    );
+    console.log(projectRoom);
   res.render("project/editor", {
     files: fileList,
     projectname: projectname,
-    roomID: projectSocket.roomID,
-    projectPath:projectSocket.projectPath
+    roomID: projectRoom.roomID,
+    projectPath: projectRoom.projectPath
   });
 });
 
-router.post("/project/joinRoom",checkAuthenticated,(req,res)=>{
-  var roomID = req.body.roomID;
-  var socketID = userProjectRooms.find(userSocket => userSocket.roomID === roomID);
-  var fileList = fs.readdirSync(socketID.projectPath);
+router.post("/project/joinRoom",checkAuthenticated, async(req,res)=>{
+  var roomId = req.body.roomID;
+  const projectRoom = await findProjectRoomById(roomId);
+  var fileList = fs.readdirSync(projectRoom.projectPath);
   res.render("project/editor", {
     files: fileList,
-    projectname: socketID.projectPath.split("\\")[6],
-    roomID: socketID.roomID
+    projectname: projectRoom.projectPath.split("\\")[6],
+    roomID: projectRoom.roomID
   });
 })
 
