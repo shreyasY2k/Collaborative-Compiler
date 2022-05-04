@@ -61,13 +61,6 @@ router.use(express.static(path.join(__dirname, "../", "public")));
 router.use(passport.initialize());
 router.use(passport.session());
 initializePassport(passport);
-// convert a connect middleware to a Socket.IO middleware
-// const wrap = middleware => (socket, next) =>
-//   middleware(socket.request, {}, next);
-
-// io.use(wrap(sessionMiddleware));
-// io.use(wrap(passport.initialize()));
-// io.use(wrap(passport.session()));
 
 io.use((socket, next) => {
   if (socket.request.user) {
@@ -77,6 +70,7 @@ io.use((socket, next) => {
     next(new Error("unauthorized"));
   }
 });
+var userProjectRooms=[]
 router.post("/project/create", checkAuthenticated, (req, res) => {
   //create folder for project inside user folder
   const userid = req.user._id;
@@ -85,6 +79,17 @@ router.post("/project/create", checkAuthenticated, (req, res) => {
     path.join(__dirname, "../", userid.toString() + "/" + projectname),
     { recursive: true }
   );
+  //create a unique room if for the project and add it to folder array
+  const room = Math.random().toString(36).substring(7);
+  userProjectRooms.push({
+    userID: req.user._id.toString(),
+    projectPath: path.join(
+      __dirname,
+      "../",
+      userid.toString() + "/" + projectname
+    ),
+    roomID: room
+  });
   //get list of folders inside user folder local
   const userFolder = path.join(__dirname, "../", userid.toString());
   const userFolderList = fs.readdirSync(userFolder);
@@ -132,39 +137,24 @@ router.get("/project/download", checkAuthenticated, (req, res) => {
 });
 var userSockets=[]
 io.on('connection', (socket) => {
-  //create room for project and get project name form socket query
-  // console.log("user connected");
-  const projectname = socket.handshake.query.projectname;
-  const userid = socket.request.user._id;
-  const projectPath = path.join(
-    __dirname,
-    "../",
-    userid.toString(),
-    projectname.toString()
-  );
-  userSockets.push({
-    projectPath:projectPath,
-    userID:userid.toString(),
-    socketID:socket.id
-  });
-  socket.join(socket.id);
-  socket.emit("roomConnected", socket.id);
-  socket.emit("path", {projectPath:projectPath,id:socket.id});
 
 socket.on("deleteFile", file => {
-  // console.log(file);
-  // var userSocket = userSockets.find(userSocket => userSocket.socketID === socket.id);
-  // console.log(userSocket);
   if (fs.existsSync(path.join(file.projectPath, file.fileName))) {
     fs.unlinkSync(path.join(file.projectPath, file.fileName));
     io.to(file.id).emit("deleteFile", file.fileName);
   }
 });
 socket.on("join", (socketID) => {
-  var userSocket = userSockets.find(userSocket => userSocket.socketID === socketID.socketID);
+  var userPRooms = userProjectRooms.find(
+    userSocket => userSocket.roomID === socketID.socketID
+  );
+  console.log(userPRooms);
   // console.log(userSocket,162);
-  socket.join(userSocket.socketID);
-  socket.emit("path", { projectPath: userSocket.projectPath, id: userSocket.socketID });
+  socket.join(userPRooms.roomID);
+  socket.emit("path", {
+    projectPath: userPRooms.projectPath,
+    id: userPRooms.roomID
+  });
 })
 //listen for addFile event
 socket.on("addFile", file => {
@@ -270,35 +260,40 @@ socket.on("compile", async file => {
     .catch(error => alert(error.message));
 });
   socket.on('disconnect', () => {
-    socket.leave(socket.request.user._id.toString() + "/" + projectname);
   });
 })
 router.get("/project/open", checkAuthenticated, async (req, res) => {
   const userId = req.user._id;
   const projectname = req.query.projectname;
-
+console.log(userProjectRooms);
   var fileList = fs
     .readdirSync(path.join(__dirname, "../", userId + "/" + projectname), {
       withFileTypes: true
     })
     .filter(item => !item.isDirectory())
     .map(item => item.name);
-
+    var projectSocket = userProjectRooms.find(
+      id =>
+        id.userID === userId.toString() &&
+        id.projectPath ===
+          path.join(__dirname, "../", userId.toString() + "/" + projectname)
+    );
   res.render("project/editor", {
     files: fileList,
     projectname: projectname,
-    socketID:""
+    roomID: projectSocket.roomID,
+    projectPath:projectSocket.projectPath
   });
 });
 
 router.post("/project/joinRoom",checkAuthenticated,(req,res)=>{
   var roomID = req.body.roomID;
-  var socketID = userSockets.find(userSocket => userSocket.socketID === roomID);
+  var socketID = userProjectRooms.find(userSocket => userSocket.roomID === roomID);
   var fileList = fs.readdirSync(socketID.projectPath);
   res.render("project/editor", {
     files: fileList,
     projectname: socketID.projectPath.split("\\")[6],
-    socketID: socketID.socketID
+    roomID: socketID.roomID
   });
 })
 
