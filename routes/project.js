@@ -178,7 +178,7 @@ socket.on("deleteFile", file => {
 });
 socket.on("join", async (socketID) => {
   var userPRooms = await findProjectRoomById(socketID.socketID);
-  console.log(userPRooms);
+  // console.log(userPRooms);
   // console.log(userSocket,162);
   socket.join(userPRooms.roomID);
   socket.emit("path", {
@@ -252,6 +252,7 @@ socket.on("updateFile", file => {
 
 socket.on("getFile", async file => {
   //get file content
+  console.log(file.fileName);
   const fileContent = fs.readFileSync(
     path.join(
       file.projectPath,
@@ -259,15 +260,23 @@ socket.on("getFile", async file => {
     ),
     "utf8"
   );
-  //search for file in database and get fileId
-  const query = userProjectsFilesRooms.findOne({
-    roomID: file.id,
-    files: { $elemMatch: { fileName: file.fileName } }
-  });
+  //search the files array in room id document for the file name
+  const query = userProjectsFilesRooms.findOne(
+    {roomID: file.id},
+    {files: {$elemMatch: {fileName: file.fileName}}}
+
+  );
+  // const query = userProjectsFilesRooms.findOne({
+  //   roomID: file.id,
+  //   files: { $elemMatch: { fileName: file.fileName } }
+  // });
   //join the room
   const fileId = await query.exec();
-  socket.join(fileId.fileRoom);
-  io.to(fileId.fileRoom).emit("fileContent", {
+  console.log(fileId.files[0].fileRoom);
+  socket.join(fileId.files[0].fileRoom);
+  console.log(io.sockets.adapter.rooms);
+  io.to(fileId.files[0].fileRoom).emit("fileContent", {
+    fileRoomID: fileId.files[0].fileRoom,
     projectName: file.projectName,
     fileName: file.fileName,
     fileContent: fileContent
@@ -319,7 +328,7 @@ router.get("/project/open", checkAuthenticated, async (req, res) => {
     })
     .filter(item => !item.isDirectory())
     .map(item => item.name);
-    console.log(projectRoom);
+    // console.log(projectRoom);
   res.render("project/editor", {
     files: fileList,
     projectname: projectname,

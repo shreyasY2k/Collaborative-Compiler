@@ -1,6 +1,7 @@
 var socket;
 var projectPath;
 var socketid;
+var fileRoomID;
 function addFile() {
   var fileName = document.querySelector("#fileName").value;
   if (!validateFileName(fileName)) {
@@ -147,6 +148,9 @@ window.addEventListener("DOMContentLoaded", event => {
     projectPath = data.projectPath
     socketid = data.id
   })
+  socket.on("updateFile", function (projn,filen,filec) {
+    console.log("updateFile",filec);
+  });
   socket.on("addFile", (fileName) => {
     var listGroup = document.querySelector(".list-group");
     var span = document.createElement("span");
@@ -212,7 +216,9 @@ window.addEventListener("DOMContentLoaded", event => {
   socket.on("fileContent", function (data) {
     var fileContent = data.fileContent;
     var fileName = data.fileName;
+    fileRoomID = data.fileRoomID;
     var projectName = data.projectName;
+    console.log(data);
     //mark the li with file name as active
     var listGroupItems = document.querySelectorAll(".list-group-item");
     for (var i = 0; i < listGroupItems.length; i++) {
@@ -370,7 +376,7 @@ function sendFileContent() {
   var fileContent = editor.getValue();
   socket.emit("updateFile", {
     projectPath: projectPath,
-    id: socketid,
+    id: fileRoomID,
     projectName: projectName,
     fileName: fileName,
     fileContent: fileContent

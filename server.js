@@ -5,7 +5,16 @@ const express = require("express");
 const app = express();
 const server = require("http").createServer(app);
 const port = process.env.PORT || 3000;
-global.io = require("socket.io")(server);
+const { instrument } = require("@socket.io/admin-ui");
+global.io = require("socket.io")(server, {
+  cors: {
+    origin: ["https://admin.socket.io"],
+    credentials: true
+  }
+});
+instrument(io, {
+  auth: false
+});
 const path = require("path");
 const indexRouter = require("./routes/index");
 const userRouter = require("./routes/user");
