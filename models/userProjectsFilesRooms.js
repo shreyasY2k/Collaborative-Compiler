@@ -4,6 +4,7 @@ const userProjectsFilesRoomsSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
   },
+  projectName: String,
   roomID: String,
   projectPath: String,
   files: [

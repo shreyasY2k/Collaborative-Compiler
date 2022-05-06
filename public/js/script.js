@@ -1,6 +1,6 @@
 var socket;
 var projectPath;
-var socketid;
+var projectRoomID;
 var fileRoomID;
 function addFile() {
   var fileName = document.querySelector("#fileName").value;
@@ -23,7 +23,7 @@ function addFile() {
     .trim();
   socket.emit("addFile", {
     projectPath: projectPath,
-    id: socketid,
+    projectRoomID: projectRoomID,
     projectName: projectName,
     fileName: fileName,
     fileContent: "",
@@ -77,7 +77,7 @@ function updateFileName(element) {
 
   socket.emit("renameFile", {
     projectPath: projectPath,
-    id: socketid,
+    projectRoomID: projectRoomID,
     projectName: projectName,
     newFileName: fileName,
     oldFileName: element.parentElement.previousElementSibling.innerText
@@ -100,7 +100,7 @@ function deleteFile(element) {
     //send delete file request to socket on server and then remove the file from the list
     socket.emit("deleteFile", {
       projectPath: projectPath,
-      id: socketid,
+      projectRoomID: projectRoomID,
       projectName: projectName,
       fileName: fileName
     });
@@ -121,35 +121,26 @@ function deleteFileFromList(fileName) {
 }
 
 window.addEventListener("DOMContentLoaded", event => {
-  var socketID = document.querySelector("#socketID").innerText.toString().trim();
-  if (socketID) {
-    socket = io.connect( {
-      query: {
-        projectname: document.querySelector("#projectName").innerText.toString(),
-        }
-        });
+  var socketID = document
+    .querySelector("#projectRoomID")
+    .innerText.toString()
+    .trim();
+    socket = io.connect();
     socket.on("connect", function() {
       socket.emit("join", {
-        socketID: socketID
+        projectRoomID: socketID
       });
     });
-  }
-  else {socket = io({
-    transports: ["websocket"],
-    upgrade: false,
-    query: {
-      projectname: document.querySelector("#projectName").innerText.toString().trim()
-    }
-  });}
-  socket.on("roomConnected", function (data) {
-    console.log("roomConnected",data);
-  });
-  socket.on("path", function (data) {
+
+  socket.on("roomDetails", function (data) {
     projectPath = data.projectPath
-    socketid = data.id
+    projectRoomID = data.projectRoomID;
+    document.querySelector("#projectRoomID")
+      ? document.querySelector("#projectRoomID").remove()
+      : null;
   })
-  socket.on("updateFile", function (projn,filen,filec) {
-    console.log("updateFile",filec);
+  socket.on("updateFile", function (data) {
+    console.log("updateFile",data.fileContent);
   });
   socket.on("addFile", (fileName) => {
     var listGroup = document.querySelector(".list-group");
@@ -165,9 +156,8 @@ window.addEventListener("DOMContentLoaded", event => {
     document.querySelector("#fileInputContainer").remove();
   }
   });
-  socket.on("renameFile", (projectName, oldFileName, newFileName) => {
-    var oldFileName = oldFileName;
-    var projectName = projectName;
+  socket.on("renameFile", (data) => {
+    var oldFileName = data.oldFileName;
     //remove the old filename from the file li containing the old name
     var listGroup = document.querySelector(".list-group");
     var span = document.createElement("span");
@@ -175,7 +165,7 @@ window.addEventListener("DOMContentLoaded", event => {
       "class",
       "list-group-item list-group-item-action list-group-item-light p-3"
     );
-    span.innerHTML = `<i class="fa fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${newFileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
+    span.innerHTML = `<i class="fa fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${data.newFileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
     listGroup.appendChild(span);
     if(document.querySelector("#fileName")){
     document.querySelector("#fileName").value = "";
@@ -217,8 +207,6 @@ window.addEventListener("DOMContentLoaded", event => {
     var fileContent = data.fileContent;
     var fileName = data.fileName;
     fileRoomID = data.fileRoomID;
-    var projectName = data.projectName;
-    console.log(data);
     //mark the li with file name as active
     var listGroupItems = document.querySelectorAll(".list-group-item");
     for (var i = 0; i < listGroupItems.length; i++) {
@@ -269,6 +257,7 @@ window.addEventListener("DOMContentLoaded", event => {
       if (lineContent.startsWith("//") && lineContent.endsWith(".")) {
         lineContent = lineContent.substring(2, lineContent.length - 1);
         socket.emit("autoSuggest", {
+          fileRoomID: fileRoomID,
           lineNumber: lineNumber,
           lineContent: lineContent
         });
@@ -344,7 +333,7 @@ function getFile(element) {
   //send request through socket to get the file content
   socket.emit("getFile", {
     projectPath: projectPath,
-    id: socketid,
+    projectRoomID: projectRoomID,
     projectName: projectName,
     fileName: fileName
   });
@@ -376,7 +365,7 @@ function sendFileContent() {
   var fileContent = editor.getValue();
   socket.emit("updateFile", {
     projectPath: projectPath,
-    id: fileRoomID,
+    fileRoomID: fileRoomID,
     projectName: projectName,
     fileName: fileName,
     fileContent: fileContent
@@ -387,6 +376,7 @@ function sendFileContent() {
 function compileIt() {
   var editor = monaco.editor.getModels()[0];
   socket.emit("compile", {
+    fileRoomID: fileRoomID,
     body: JSON.stringify({
       code: editor.getValue(),
       language: document.querySelector("#dropdown-language").value,

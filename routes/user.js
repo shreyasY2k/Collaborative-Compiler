@@ -57,7 +57,6 @@ router.get("/dashboard", checkAuthenticated, (req, res) => {
   //if user folder exists
   if (fs.existsSync(path.join(__dirname, "../", userId.toString()))) {
     //get list of folders inside user folder local
-    console.log("user folder exists");
     const userFolder = path.join(__dirname, "../", userId.toString());
     const userFolderList = fs.readdirSync(userFolder);
     res.render("users/dashboard", {
