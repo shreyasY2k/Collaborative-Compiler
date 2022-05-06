@@ -26,8 +26,7 @@ function addFile() {
     projectRoomID: projectRoomID,
     projectName: projectName,
     fileName: fileName,
-    fileContent: "",
-
+    fileContent: ""
   });
 }
 
@@ -125,24 +124,24 @@ window.addEventListener("DOMContentLoaded", event => {
     .querySelector("#projectRoomID")
     .innerText.toString()
     .trim();
-    socket = io.connect();
-    socket.on("connect", function() {
-      socket.emit("join", {
-        projectRoomID: socketID
-      });
+  socket = io.connect();
+  socket.on("connect", function () {
+    socket.emit("join", {
+      projectRoomID: socketID
     });
+  });
 
   socket.on("roomDetails", function (data) {
-    projectPath = data.projectPath
+    projectPath = data.projectPath;
     projectRoomID = data.projectRoomID;
     document.querySelector("#projectRoomID")
       ? document.querySelector("#projectRoomID").remove()
       : null;
-  })
-  socket.on("updateFile", function (data) {
-    console.log("updateFile",data.fileContent);
   });
-  socket.on("addFile", (fileName) => {
+  socket.on("updateFile", function (data) {
+    console.log("updateFile", data.fileContent);
+  });
+  socket.on("addFile", fileName => {
     var listGroup = document.querySelector(".list-group");
     var span = document.createElement("span");
     span.setAttribute(
@@ -151,12 +150,12 @@ window.addEventListener("DOMContentLoaded", event => {
     );
     span.innerHTML = `<i class="fa fa-lg fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${fileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
     listGroup.appendChild(span);
-    if(document.querySelector("#fileName")){
-    document.querySelector("#fileName").value = "";
-    document.querySelector("#fileInputContainer").remove();
-  }
+    if (document.querySelector("#fileName")) {
+      document.querySelector("#fileName").value = "";
+      document.querySelector("#fileInputContainer").remove();
+    }
   });
-  socket.on("renameFile", (data) => {
+  socket.on("renameFile", data => {
     var oldFileName = data.oldFileName;
     //remove the old filename from the file li containing the old name
     var listGroup = document.querySelector(".list-group");
@@ -167,12 +166,13 @@ window.addEventListener("DOMContentLoaded", event => {
     );
     span.innerHTML = `<i class="fa fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${data.newFileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
     listGroup.appendChild(span);
-    if(document.querySelector("#fileName")){
-    document.querySelector("#fileName").value = "";
-    document.querySelector("#fileInputContainer").remove();}
+    if (document.querySelector("#fileName")) {
+      document.querySelector("#fileName").value = "";
+      document.querySelector("#fileInputContainer").remove();
+    }
     deleteFileFromList(oldFileName);
   });
-  socket.on("deleteFile", (fileName) => {
+  socket.on("deleteFile", fileName => {
     deleteFileFromList(fileName);
   });
   const sidebarToggle = document.body.querySelector("#sidebarToggle");
@@ -372,7 +372,6 @@ function sendFileContent() {
   });
 }
 
-
 function compileIt() {
   var editor = monaco.editor.getModels()[0];
   socket.emit("compile", {
@@ -386,4 +385,91 @@ function compileIt() {
         .join("\n")
     })
   });
+}
+
+function manageCollaboration() {
+  fetch("/user/project/startCollaboration", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      projectRoomID: projectRoomID
+    })
+  })
+    .then(res => {
+      return res.json();
+    })
+    .then(data => {
+      if (data.status === "success") {
+        initializeCollabStyles();
+      }
+    });
+}
+function initializeCollabStyles() {
+  document.querySelector("#manageCollaboration").innerText =
+    "Stop Collaboration";
+  document.querySelector("#back").style.display = "none";
+  document
+    .querySelector("#manageCollaboration")
+    .setAttribute("onclick", "stopCollaboration()");
+  document
+    .querySelector("#manageCollaboration")
+    .classList.remove("btn-outline-success");
+  document
+    .querySelector("#manageCollaboration")
+    .classList.add("btn-outline-danger");
+  var roomIDListItem = document.querySelector("#roomIdLi");
+  roomIDListItem.classList.remove("d-none");
+  roomIDListItem.classList.add("d-block");
+  roomIDListItem.innerHTML = `<div class="clipboard input-group">
+<input onclick="copy()" class="copy-input form-control" value="${projectRoomID}" id="copyClipboard" readonly>
+<button class="copy-btn btn" id="copyButton" onclick="copy()"><i class="far fa-copy"></i></button>
+</div>
+<div id="copied-success" class="copied">
+  <span>&nbsp&nbspCopied!&nbsp&nbsp</span>
+</div>`;
+}
+function stopCollaboration() {
+  fetch("/user/project/stopCollaboration", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      projectRoomID: projectRoomID
+    })
+  })
+    .then(res => {
+      return res.json();
+    })
+    .then(data => {
+      if (data.status === "success") {
+        document.querySelector("#manageCollaboration").innerText =
+          "Start Collaboration";
+        document.querySelector("#back").style.display = "block";
+        document
+          .querySelector("#manageCollaboration")
+          .setAttribute("onclick", "manageCollaboration()");
+        document
+          .querySelector("#manageCollaboration")
+          .classList.remove("btn-outline-danger");
+        document
+          .querySelector("#manageCollaboration")
+          .classList.add("btn-outline-success");
+        var roomIDListItem = document.querySelector("#roomIdLi");
+        roomIDListItem.classList.remove("d-block");
+        roomIDListItem.classList.add("d-none");
+      }
+    });
+
+}
+function copy() {
+  var copyText = document.getElementById("copyClipboard");
+  copyText.select();
+  copyText.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+
+  $("#copied-success").fadeIn(800);
+  $("#copied-success").fadeOut(800);
 }

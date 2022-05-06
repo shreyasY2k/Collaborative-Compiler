@@ -122,11 +122,16 @@
                         <form action="/user/project/joinRoom" method="post">
                             <input type="text" class="form-control" id="roomID" name="roomID" placeholder="Room ID">
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Join</button>
-                        </form>
-                    </div>
+                    <% if (error) { %>
+                        <p class="alert alert-danger">
+                            <%= error %>
+                        </p>
+                        <% } %>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Join</button>
+                                </form>
+                            </div>
                 </div>
             </div>
         </div>

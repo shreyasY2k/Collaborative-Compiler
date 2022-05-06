@@ -11300,3 +11300,62 @@ border-bottom-color: white;
     max-width: 140px;
     vertical-align: middle;
 }
+
+.clipboard {
+    position: relative;
+}
+
+
+/* You just need to get this field */
+
+.copy-input {
+    max-width: inherit;
+    width: 100%;
+    cursor: pointer;
+    background-color: #eaeaeb;
+    border: none;
+    color: #6c6c6c;
+    font-size: 14px;
+    border-radius: 5px;
+    padding-left: 2px;
+}
+
+.copy-input:focus {
+    outline: none;
+}
+
+.copy-btn {
+    width: 40px;
+    background-color: #eaeaeb;
+    font-size: 18px;
+    padding: 6px 9px;
+    border-radius: 5px;
+    border: none;
+    color: #6c6c6c;
+    margin-left: -50px;
+    transition: all .4s;
+}
+
+.copy-btn:hover {
+    transform: scale(1.2);
+    color: #1a1a1a;
+    cursor: pointer;
+}
+
+.copy-btn:focus {
+    outline: none;
+}
+
+.copied {
+    font-family: 'Montserrat', sans-serif;
+    width: max-content;
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    margin: auto;
+    color: #000;
+    background-color: #fff;
+    border-radius: 5px;
+}

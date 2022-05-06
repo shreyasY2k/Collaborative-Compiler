@@ -61,7 +61,8 @@ router.get("/dashboard", checkAuthenticated, (req, res) => {
     const userFolderList = fs.readdirSync(userFolder);
     res.render("users/dashboard", {
       files: userFolderList,
-      name: req.user.name
+      name: req.user.name,
+      error: ''
     });
   } else {
   fs.mkdirSync(path.join(__dirname, "../", userId.toString()), {

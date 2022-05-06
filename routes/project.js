@@ -4,7 +4,11 @@ if (process.env.NODE_ENV != "production") {
 async function findProjectRoom(userid, projectName) {
   const userProjects = await userProjectsFilesRooms.findOne({
     userID: userid.toString(),
-    projectPath: path.join(__dirname, "../", userid.toString() + "/" + projectName)
+    projectPath: path.join(
+      __dirname,
+      "../",
+      userid.toString() + "/" + projectName
+    )
   });
   return userProjects;
 }
@@ -56,12 +60,14 @@ const AWS = require("aws-sdk");
 const fs = require("fs");
 const fetch = require("node-fetch");
 const userProjectsFilesRooms = require("../models/userProjectsFilesRooms");
+const activeCollabRooms = require("../models/activeCollabRooms");
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 });
 var s3 = new AWS.S3();
 router.use(express.urlencoded({ extended: false }));
+router.use(express.json());
 const sessionMiddleware = session({
   secret: process.env.SECRET,
   resave: false,
@@ -178,7 +184,7 @@ router.get("/project/open", checkAuthenticated, async (req, res) => {
   });
 });
 
-io.on('connection', (socket) => {
+io.on("connection", socket => {
   socket.on("join", async data => {
     var userPRooms = await findProjectRoomById(data.projectRoomID);
     socket.join(userPRooms.roomID);
@@ -195,7 +201,9 @@ io.on('connection', (socket) => {
         { roomID: data.projectRoomID },
         {
           $push: {
-            files: { $each: [{ fileName: data.fileName, fileRoom: fileRoomID }] }
+            files: {
+              $each: [{ fileName: data.fileName, fileRoom: fileRoomID }]
+            }
           }
         }
       );
@@ -233,7 +241,6 @@ io.on('connection', (socket) => {
         path.join(data.projectPath, data.newFileName)
       );
 
-
       var newFileRoomID = Math.random().toString(36).substring(7);
 
       const deleteFileName = userProjectsFilesRooms.updateOne(
@@ -249,52 +256,51 @@ io.on('connection', (socket) => {
         { roomID: data.projectRoomID },
         {
           $push: {
-            files: { $each: [{ fileName: data.newFileName, fileRoom:newFileRoomID }] }
+            files: {
+              $each: [{ fileName: data.newFileName, fileRoom: newFileRoomID }]
+            }
           }
         }
       );
       await addFileName.exec();
-      io.to(data.projectRoomID).emit(
-        "renameFile",
-        {
-        projectName:data.projectName,
-        oldFileName:data.oldFileName,
-        newFileName:data.newFileName}
-      );
+      io.to(data.projectRoomID).emit("renameFile", {
+        projectName: data.projectName,
+        oldFileName: data.oldFileName,
+        newFileName: data.newFileName
+      });
     }
   });
-    socket.on("getFile", async data => {
-      //get file content
-      const fileContent = fs.readFileSync(
-        path.join(data.projectPath, data.fileName),
-        "utf8"
-      );
-      //search the files array in room id document for the file name
-      const query = userProjectsFilesRooms.findOne(
-        { roomID: data.projectRoomID },
-        { files: { $elemMatch: { fileName: data.fileName } } }
-      );
-      const file = await query.exec();
-      socket.join(file.files[0].fileRoom);
-      io.to(file.files[0].fileRoom).emit("fileContent", {
-        fileRoomID: file.files[0].fileRoom,
-        projectName: data.projectName,
-        fileName: data.fileName,
-        fileContent: fileContent
-      });
+  socket.on("getFile", async data => {
+    //get file content
+    const fileContent = fs.readFileSync(
+      path.join(data.projectPath, data.fileName),
+      "utf8"
+    );
+    //search the files array in room id document for the file name
+    const query = userProjectsFilesRooms.findOne(
+      { roomID: data.projectRoomID },
+      { files: { $elemMatch: { fileName: data.fileName } } }
+    );
+    const file = await query.exec();
+    socket.join(file.files[0].fileRoom);
+    io.to(file.files[0].fileRoom).emit("fileContent", {
+      fileRoomID: file.files[0].fileRoom,
+      projectName: data.projectName,
+      fileName: data.fileName,
+      fileContent: fileContent
     });
+  });
 
   socket.on("updateFile", data => {
     fs.writeFileSync(
       path.join(data.projectPath, data.fileName),
       data.fileContent
     );
-    io.to(data.fileRoomID).emit(
-      "updateFile",{
-      projectName:data.projectName,
-      fileName:data.fileName,
-      fileContent:data.fileContent}
-    );
+    io.to(data.fileRoomID).emit("updateFile", {
+      projectName: data.projectName,
+      fileName: data.fileName,
+      fileContent: data.fileContent
+    });
   });
   socket.on("autoSuggest", file => {
     var question = file.lineContent;
@@ -307,7 +313,10 @@ io.on('connection', (socket) => {
     )
       .then(res => res.json())
       .then(data => {
-        io.to(fileRoomID).emit("autoSuggest", { data: data, lineNumber: file.lineNumber });
+        io.to(fileRoomID).emit("autoSuggest", {
+          data: data,
+          lineNumber: file.lineNumber
+        });
       });
   });
   socket.on("compile", async file => {
@@ -328,17 +337,52 @@ io.on('connection', (socket) => {
       .catch(error => alert(error.message));
   });
   socket.on("disconnect", () => {});
-})
+});
 
-router.post("/project/joinRoom",checkAuthenticated, async(req,res)=>{
+router.post("/project/joinRoom", checkAuthenticated, async (req, res) => {
   var roomId = req.body.roomID;
+  //check if room id exists in database
+  if(await activeCollabRooms.findOne({collabRoomID: roomId})){
   const projectRoom = await findProjectRoomById(roomId);
   var fileList = fs.readdirSync(projectRoom.projectPath);
   res.render("project/editor", {
     files: fileList,
     projectname: projectRoom.projectName,
-    projectRoomID : projectRoom.roomID
+    projectRoomID: projectRoom.roomID
   });
-})
+  }else{
+    res.redirect("/user/dashboard");
+  }
+});
+
+router.post(
+  "/project/startCollaboration",
+  checkAuthenticated,
+  async (req, res) => {
+    var roomId = req.body.projectRoomID;
+    const collabRoomId = await activeCollabRooms.findOne({
+      collabRoomID: roomId
+    });
+    if (collabRoomId == null) {
+      const query = new activeCollabRooms({
+        collabRoomID: roomId
+      });
+      await query.save();
+    }
+    res.send({ status: "success" });
+  }
+);
+
+router.post(
+  "/project/stopCollaboration",
+  checkAuthenticated,
+  async (req, res) => {
+    var roomId = req.body.projectRoomID;
+    const collabRoomId = await activeCollabRooms.findOneAndDelete({
+      collabRoomID: roomId
+    });
+    res.send({ status: "success" });
+  }
+);
 
 module.exports = router;
