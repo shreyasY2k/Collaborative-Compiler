@@ -309,6 +309,16 @@ io.on("connection", socket => {
                 });
             });
     });
+
+    socket.on("chat", data => {
+        socket.broadcast.to(data.projectRoomID).emit("chat", {
+            userName: data.userName,
+            message: data.message,
+            isHost: data.isHost
+        });
+    })
+
+
     socket.on("compile", async file => {
         var fileRoomID = file.fileRoomID;
         await fetch("https://codeorbored.herokuapp.com", {

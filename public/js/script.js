@@ -303,6 +303,9 @@ window.addEventListener("DOMContentLoaded", event => {
         document.getElementById("opscreen").style.visibility = "visible";
         document.getElementById("output").innerHTML = data.output;
     });
+    socket.on("chat", function(data) {
+        addResponseMsg(data.message, data.userName, data.isHost);
+    });
 });
 
 document.getElementById("message").addEventListener("keyup", function(event) {
@@ -326,10 +329,10 @@ document.getElementById("chatbot_toggle").onclick = function() {
 function send() {
     var msg = document.getElementById("message").value;
     if (msg == "") return;
-    addMsg(msg);
+    addMsg(msg, userName, isHost);
 }
 
-function addMsg(msg) {
+function addMsg(msg, userName, isHost) {
     var div = document.createElement("div");
     div.innerHTML =
         `<span style='flex-grow:1'>
@@ -342,11 +345,19 @@ function addMsg(msg) {
     document.getElementById("message-box").scrollTop = document.getElementById(
         "message-box"
     ).scrollHeight;
+    socket.emit("chat", {
+        message: msg,
+        projectRoomID: projectRoomID,
+        userName: userName,
+        isHost: isHost
+    });
 }
 
-function addResponseMsg(msg) {
+function addResponseMsg(msg, userName, isHost) {
     var div = document.createElement("div");
-    div.innerHTML = "<div class='chat-message-received'>" + msg + "</div>";
+    div.innerHTML = `<div class='chat-message-received'> <div class="chat-log_author">
+    ${userName} ${isHost ? "(Host)" : "(Collaborator)"}
+  </div> <div>${msg}</div></div>`;
     div.className = "chat-message-div";
     document.getElementById("message-box").appendChild(div);
     document.getElementById("message-box").scrollTop = document.getElementById(
