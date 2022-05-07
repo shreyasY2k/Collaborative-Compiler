@@ -3,14 +3,19 @@ if (process.env.NODE_ENV != "production") {
 }
 const express = require("express");
 const router = express.Router();
+//passwords hashing package
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
+//User authentication package
 const passport = require("passport");
 const flash = require("express-flash");
+//session initalization package
 const session = require("express-session");
 const initializePassport = require("../passport-config");
+//CRUD on locally stored files
 const fs = require("fs");
 const path = require("path");
+//package to connect to s3 bucket
 const AWS = require("aws-sdk");
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -32,9 +37,9 @@ router.use(express.static(path.join(__dirname, "../", "public")));
 router.use(passport.initialize());
 router.use(passport.session());
 initializePassport(passport);
-router.get("/", (req, res) => {
-  res.render("index");
-});
+// router.get("/", (req, res) => {
+//   res.render("index");
+// });
 
 // convert a connect middleware to a Socket.IO middleware
 const wrap = middleware => (socket, next) =>
@@ -59,6 +64,7 @@ router.get("/dashboard", checkAuthenticated, (req, res) => {
     //get list of folders inside user folder local
     const userFolder = path.join(__dirname, "../", userId.toString());
     const userFolderList = fs.readdirSync(userFolder);
+    // console.log(userFolderList);
     res.render("users/dashboard", {
       files: userFolderList,
       name: req.user.name,
@@ -134,7 +140,8 @@ router.get("/dashboard", checkAuthenticated, (req, res) => {
          const userFolderList = fs.readdirSync(userFolder);
         res.render("users/dashboard", {
           files: userFolderList,
-          name: req.user.name
+          name: req.user.name,
+          error:''
         });
       }
     }

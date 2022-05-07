@@ -1,22 +1,22 @@
 if (process.env.NODE_ENV != "production") {
-  require("dotenv").config();
+    require("dotenv").config();
 }
 async function findProjectRoom(userid, projectName) {
-  const userProjects = await userProjectsFilesRooms.findOne({
-    userID: userid.toString(),
-    projectPath: path.join(
-      __dirname,
-      "../",
-      userid.toString() + "/" + projectName
-    )
-  });
-  return userProjects;
+    const userProjects = await userProjectsFilesRooms.findOne({
+        userID: userid.toString(),
+        projectPath: path.join(
+            __dirname,
+            "../",
+            userid.toString() + "/" + projectName
+        )
+    });
+    return userProjects;
 }
 async function findProjectRoomById(roomid) {
-  const userProjects = await userProjectsFilesRooms.findOne({
-    roomID: roomid.toString()
-  });
-  return userProjects;
+    const userProjects = await userProjectsFilesRooms.findOne({
+        roomID: roomid.toString()
+    });
+    return userProjects;
 }
 // async function deleteProject(bucket, dir) {
 //   const listParams = {
@@ -42,11 +42,11 @@ async function findProjectRoomById(roomid) {
 //   if (listedObjects.IsTruncated) await deleteProject(bucket, dir);
 // }
 function checkAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) {
-    return next();
-  } else {
-    res.redirect("/user/login");
-  }
+    if (req.isAuthenticated()) {
+        return next();
+    } else {
+        res.redirect("/user/login");
+    }
 }
 const express = require("express");
 const router = express.Router();
@@ -62,16 +62,16 @@ const fetch = require("node-fetch");
 const userProjectsFilesRooms = require("../models/userProjectsFilesRooms");
 const activeCollabRooms = require("../models/activeCollabRooms");
 AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 });
 var s3 = new AWS.S3();
 router.use(express.urlencoded({ extended: false }));
 router.use(express.json());
 const sessionMiddleware = session({
-  secret: process.env.SECRET,
-  resave: false,
-  saveUninitialized: false
+    secret: process.env.SECRET,
+    resave: false,
+    saveUninitialized: false
 });
 router.use(flash());
 router.use(sessionMiddleware);
@@ -82,307 +82,298 @@ router.use(passport.session());
 initializePassport(passport);
 
 io.use((socket, next) => {
-  if (socket.request.user) {
-    // console.log(socket.request.user);
-    next();
-  } else {
-    next(new Error("unauthorized"));
-  }
+    if (socket.request.user) {
+        // console.log(socket.request.user);
+        next();
+    } else {
+        next(new Error("unauthorized"));
+    }
 });
-router.post("/project/create", checkAuthenticated, (req, res) => {
-  //create folder for project inside user folder
-  const userid = req.user._id;
-  const projectname = req.body.projectName;
-  fs.mkdirSync(
-    path.join(__dirname, "../", userid.toString() + "/" + projectname),
-    { recursive: true }
-  );
-  //create a unique room if for the project and add it to folder array
-  const room = Math.random().toString(36).substring(7);
-  //add these to the database
-  const userProjectsFilesRoomsSchema = new userProjectsFilesRooms({
-    userId: userid.toString(),
-    projectName: projectname,
-    roomID: room,
-    projectPath: path.join(
-      __dirname,
-      "../",
-      userid.toString() + "/" + projectname
-    ),
-    files: []
-  });
-  userProjectsFilesRoomsSchema.save();
-
-  //get list of folders inside user folder local
-  const userFolder = path.join(__dirname, "../", userid.toString());
-  const userFolderList = fs.readdirSync(userFolder);
-  res.render("users/dashboard", {
-    files: userFolderList,
-    name: req.user.name
-  });
-});
-
-router.get("/project/delete", checkAuthenticated, async (req, res) => {
-  const userid = req.user._id;
-  const projectname = req.query.projectname;
-  fs.rmSync(
-    path.join(__dirname, "../", userid.toString() + "/" + projectname),
-    { recursive: true }
-  );
-  // await deleteProject(
-  //   process.env.AWS_S3_BUCKET_NAME,
-  //   userid.toString() + "/" + projectname
-  // );
-  await userProjectsFilesRooms.deleteOne({
-    userId: userid.toString(),
-    projectname: projectname
-  });
-  res.redirect("/user/dashboard");
-});
-
-router.get("/project/download", checkAuthenticated, (req, res) => {
-  const userid = req.user._id;
-  const projectname = req.query.projectname;
-  zl.archiveFolder(
-    path.join(__dirname, "../", userid.toString(), projectname.toString()),
-    path.join(
-      __dirname,
-      "../",
-      userid.toString(),
-      projectname.toString() + ".zip"
-    )
-  ).then(() => {
-    res.download(
-      path.join(
-        __dirname,
-        "../",
-        userid.toString(),
-        projectname.toString() + ".zip"
-      )
+router.post("/create", checkAuthenticated, (req, res) => {
+    //create folder for project inside user folder
+    const userid = req.user._id;
+    const projectname = req.body.projectName;
+    fs.mkdirSync(
+        path.join(__dirname, "../", userid.toString() + "/" + projectname), { recursive: true }
     );
-  });
+    //create a unique room if for the project and add it to folder array
+    const room = Math.random().toString(36).substring(7);
+    //add these to the database
+    const userProjectsFilesRoomsSchema = new userProjectsFilesRooms({
+        userId: userid.toString(),
+        projectName: projectname,
+        roomID: room,
+        projectPath: path.join(
+            __dirname,
+            "../",
+            userid.toString() + "/" + projectname
+        ),
+        files: []
+    });
+    userProjectsFilesRoomsSchema.save();
+
+    //get list of folders inside user folder local
+    const userFolder = path.join(__dirname, "../", userid.toString());
+    const userFolderList = fs.readdirSync(userFolder);
+    res.render("users/dashboard", {
+        files: userFolderList,
+        name: req.user.name,
+        error: ''
+    });
 });
 
-router.get("/project/open", checkAuthenticated, async (req, res) => {
-  const userId = req.user._id;
-  const projectname = req.query.projectname;
-  const projectRoom = await findProjectRoom(userId, projectname);
-  var fileList = fs
-    .readdirSync(
-      path.join(__dirname, "../", userId.toString() + "/" + projectname),
-      {
-        withFileTypes: true
-      }
-    )
-    .filter(item => !item.isDirectory())
-    .map(item => item.name);
-  res.render("project/editor", {
-    files: fileList,
-    projectname: projectname,
-    projectRoomID: projectRoom.roomID,
-    projectPath: projectRoom.projectPath
-  });
+router.get("/delete", checkAuthenticated, async(req, res) => {
+    const userid = req.user._id;
+    const projectname = req.query.projectname;
+    fs.rmSync(
+        path.join(__dirname, "../", userid.toString() + "/" + projectname), { recursive: true }
+    );
+    // await deleteProject(
+    //   process.env.AWS_S3_BUCKET_NAME,
+    //   userid.toString() + "/" + projectname
+    // );
+    await userProjectsFilesRooms.deleteOne({
+        userId: userid.toString(),
+        projectname: projectname
+    });
+    res.redirect("/user/dashboard");
+});
+
+router.get("/download", checkAuthenticated, (req, res) => {
+    const userid = req.user._id;
+    const projectname = req.query.projectname;
+    zl.archiveFolder(
+        path.join(__dirname, "../", userid.toString(), projectname.toString()),
+        path.join(
+            __dirname,
+            "../",
+            userid.toString(),
+            projectname.toString() + ".zip"
+        )
+    ).then(() => {
+        res.download(
+            path.join(
+                __dirname,
+                "../",
+                userid.toString(),
+                projectname.toString() + ".zip"
+            )
+        );
+    });
+});
+
+router.get("/open", checkAuthenticated, async(req, res) => {
+    const userId = req.user._id;
+    const projectname = req.query.projectname;
+    const projectRoom = await findProjectRoom(userId, projectname);
+    var fileList = fs
+        .readdirSync(
+            path.join(__dirname, "../", userId.toString() + "/" + projectname), {
+                withFileTypes: true
+            }
+        )
+        .filter(item => !item.isDirectory())
+        .map(item => item.name);
+    res.render("project/editor", {
+        isHost: true,
+        files: fileList,
+        projectname: projectname,
+        projectRoomID: projectRoom.roomID,
+        projectPath: projectRoom.projectPath
+    });
 });
 
 io.on("connection", socket => {
-  socket.on("join", async data => {
-    var userPRooms = await findProjectRoomById(data.projectRoomID);
-    socket.join(userPRooms.roomID);
-    socket.emit("roomDetails", {
-      projectPath: userPRooms.projectPath,
-      projectRoomID: userPRooms.roomID
-    });
-  });
-  //listen for addFile event
-  socket.on("addFile", async data => {
-    if (!fs.existsSync(path.join(data.projectPath, data.fileName))) {
-      const fileRoomID = Math.random().toString(36).substring(7);
-      const query = userProjectsFilesRooms.updateOne(
-        { roomID: data.projectRoomID },
-        {
-          $push: {
-            files: {
-              $each: [{ fileName: data.fileName, fileRoom: fileRoomID }]
-            }
-          }
+    socket.on("join", async data => {
+        var isHost = false;
+        var userPRooms = await findProjectRoomById(data.projectRoomID);
+        if (userPRooms.userId.toString() === socket.request.user._id.toString()) {
+            isHost = true;
         }
-      );
-      await query.exec();
-      fs.writeFileSync(
-        path.join(data.projectPath, data.fileName),
-        data.fileContent
-      );
-      io.to(data.projectRoomID).emit("addFile", data.fileName);
-    }
-  });
-
-  socket.on("deleteFile", async data => {
-    if (fs.existsSync(path.join(data.projectPath, data.fileName))) {
-      fs.unlinkSync(path.join(data.projectPath, data.fileName));
-      //remove file from database
-      const query = userProjectsFilesRooms.updateOne(
-        { roomID: data.projectRoomID },
-        {
-          $pull: {
-            files: { fileName: data.fileName }
-          }
-        }
-      );
-      await query.exec();
-      io.to(data.projectRoomID).emit("deleteFile", data.fileName);
-    }
-  });
-
-  //listen for renameFile event
-  socket.on("renameFile", async data => {
-    if (fs.existsSync(path.join(data.projectPath, data.oldFileName))) {
-      fs.renameSync(
-        path.join(data.projectPath, data.oldFileName),
-        path.join(data.projectPath, data.newFileName)
-      );
-
-      var newFileRoomID = Math.random().toString(36).substring(7);
-
-      const deleteFileName = userProjectsFilesRooms.updateOne(
-        { roomID: data.projectRoomID },
-        {
-          $pull: {
-            files: { fileName: data.oldFileName }
-          }
-        }
-      );
-      await deleteFileName.exec();
-      const addFileName = userProjectsFilesRooms.updateOne(
-        { roomID: data.projectRoomID },
-        {
-          $push: {
-            files: {
-              $each: [{ fileName: data.newFileName, fileRoom: newFileRoomID }]
-            }
-          }
-        }
-      );
-      await addFileName.exec();
-      io.to(data.projectRoomID).emit("renameFile", {
-        projectName: data.projectName,
-        oldFileName: data.oldFileName,
-        newFileName: data.newFileName
-      });
-    }
-  });
-  socket.on("getFile", async data => {
-    //get file content
-    const fileContent = fs.readFileSync(
-      path.join(data.projectPath, data.fileName),
-      "utf8"
-    );
-    //search the files array in room id document for the file name
-    const query = userProjectsFilesRooms.findOne(
-      { roomID: data.projectRoomID },
-      { files: { $elemMatch: { fileName: data.fileName } } }
-    );
-    const file = await query.exec();
-    socket.join(file.files[0].fileRoom);
-    io.to(file.files[0].fileRoom).emit("fileContent", {
-      fileRoomID: file.files[0].fileRoom,
-      projectName: data.projectName,
-      fileName: data.fileName,
-      fileContent: fileContent
-    });
-  });
-
-  socket.on("updateFile", data => {
-    fs.writeFileSync(
-      path.join(data.projectPath, data.fileName),
-      data.fileContent
-    );
-    io.to(data.fileRoomID).emit("updateFile", {
-      projectName: data.projectName,
-      fileName: data.fileName,
-      fileContent: data.fileContent
-    });
-  });
-  socket.on("autoSuggest", file => {
-    var question = file.lineContent;
-    var fileRoomID = file.fileRoomID;
-    //fetch request to codegrepper
-    fetch(
-      "https://www.codegrepper.com/api/search.php?q=" +
-        question +
-        "&search_options=search_titles"
-    )
-      .then(res => res.json())
-      .then(data => {
-        io.to(fileRoomID).emit("autoSuggest", {
-          data: data,
-          lineNumber: file.lineNumber
+        socket.join(userPRooms.roomID);
+        socket.emit("roomDetails", {
+            userName: socket.request.user.name,
+            projectPath: userPRooms.projectPath,
+            projectRoomID: userPRooms.roomID,
+            isHost: isHost
         });
-      });
-  });
-  socket.on("compile", async file => {
-    var fileRoomID = file.fileRoomID;
-    await fetch("https://codeorbored.herokuapp.com", {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain"
-      },
-      body: file.body
-    })
-      .then(response => {
-        return response.json();
-      })
-      .then(data => {
-        io.to(fileRoomID).emit("compileOutput", { output: data.output });
-      })
-      .catch(error => alert(error.message));
-  });
-  socket.on("disconnect", () => {});
+    });
+    //listen for addFile event
+    socket.on("addFile", async data => {
+        if (!fs.existsSync(path.join(data.projectPath, data.fileName))) {
+            const fileRoomID = Math.random().toString(36).substring(7);
+            const query = userProjectsFilesRooms.updateOne({ roomID: data.projectRoomID }, {
+                $push: {
+                    files: {
+                        $each: [{ fileName: data.fileName, fileRoom: fileRoomID }]
+                    }
+                }
+            });
+            await query.exec();
+            fs.writeFileSync(
+                path.join(data.projectPath, data.fileName),
+                data.fileContent
+            );
+            io.to(data.projectRoomID).emit("addFile", data.fileName);
+        }
+    });
+
+    socket.on("deleteFile", async data => {
+        if (fs.existsSync(path.join(data.projectPath, data.fileName))) {
+            fs.unlinkSync(path.join(data.projectPath, data.fileName));
+            //remove file from database
+            const query = userProjectsFilesRooms.updateOne({ roomID: data.projectRoomID }, {
+                $pull: {
+                    files: { fileName: data.fileName }
+                }
+            });
+            await query.exec();
+            io.to(data.projectRoomID).emit("deleteFile", data.fileName);
+        }
+    });
+
+    //listen for renameFile event
+    socket.on("renameFile", async data => {
+        if (fs.existsSync(path.join(data.projectPath, data.oldFileName))) {
+            fs.renameSync(
+                path.join(data.projectPath, data.oldFileName),
+                path.join(data.projectPath, data.newFileName)
+            );
+
+            var newFileRoomID = Math.random().toString(36).substring(7);
+
+            const deleteFileName = userProjectsFilesRooms.updateOne({ roomID: data.projectRoomID }, {
+                $pull: {
+                    files: { fileName: data.oldFileName }
+                }
+            });
+            await deleteFileName.exec();
+            const addFileName = userProjectsFilesRooms.updateOne({ roomID: data.projectRoomID }, {
+                $push: {
+                    files: {
+                        $each: [{ fileName: data.newFileName, fileRoom: newFileRoomID }]
+                    }
+                }
+            });
+            await addFileName.exec();
+            io.to(data.projectRoomID).emit("renameFile", {
+                projectName: data.projectName,
+                oldFileName: data.oldFileName,
+                newFileName: data.newFileName
+            });
+        }
+    });
+    socket.on("getFile", async data => {
+        //get file content
+        const fileContent = fs.readFileSync(
+            path.join(data.projectPath, data.fileName),
+            "utf8"
+        );
+        //search the files array in room id document for the file name
+        const query = userProjectsFilesRooms.findOne({ roomID: data.projectRoomID }, { files: { $elemMatch: { fileName: data.fileName } } });
+        const file = await query.exec();
+        socket.join(file.files[0].fileRoom);
+        io.to(file.files[0].fileRoom).emit("fileContent", {
+            fileRoomID: file.files[0].fileRoom,
+            projectName: data.projectName,
+            fileName: data.fileName,
+            fileContent: fileContent
+        });
+    });
+
+    socket.on("updateFile", data => {
+        fs.writeFileSync(
+            path.join(data.projectPath, data.fileName),
+            data.fileContent
+        );
+        io.to(data.fileRoomID).emit("updateFile", {
+            projectName: data.projectName,
+            fileName: data.fileName,
+            fileContent: data.fileContent
+        });
+    });
+    socket.on("autoSuggest", file => {
+        var question = file.lineContent;
+        var fileRoomID = file.fileRoomID;
+        //fetch request to codegrepper
+        fetch(
+                "https://www.codegrepper.com/api/search.php?q=" +
+                question +
+                "&search_options=search_titles"
+            )
+            .then(res => res.json())
+            .then(data => {
+                io.to(fileRoomID).emit("autoSuggest", {
+                    data: data,
+                    lineNumber: file.lineNumber
+                });
+            });
+    });
+    socket.on("compile", async file => {
+        var fileRoomID = file.fileRoomID;
+        await fetch("https://codeorbored.herokuapp.com", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "text/plain"
+                },
+                body: file.body
+            })
+            .then(response => {
+                return response.json();
+            })
+            .then(data => {
+                io.to(fileRoomID).emit("compileOutput", { output: data.output });
+            })
+            .catch(error => alert(error.message));
+    });
+    socket.on("disconnect", () => {});
 });
 
-router.post("/project/joinRoom", checkAuthenticated, async (req, res) => {
-  var roomId = req.body.roomID;
-  //check if room id exists in database
-  if(await activeCollabRooms.findOne({collabRoomID: roomId})){
-  const projectRoom = await findProjectRoomById(roomId);
-  var fileList = fs.readdirSync(projectRoom.projectPath);
-  res.render("project/editor", {
-    files: fileList,
-    projectname: projectRoom.projectName,
-    projectRoomID: projectRoom.roomID
-  });
-  }else{
-    res.redirect("/user/dashboard");
-  }
+router.post("/joinRoom", checkAuthenticated, async(req, res) => {
+    var roomId = req.body.roomID;
+    //check if room id exists in database
+    if (await activeCollabRooms.findOne({ collabRoomID: roomId })) {
+        const projectRoom = await findProjectRoomById(roomId);
+        var fileList = fs.readdirSync(projectRoom.projectPath);
+        res.render("project/editor", {
+            isHost: false,
+            files: fileList,
+            projectname: projectRoom.projectName,
+            projectRoomID: projectRoom.roomID
+        });
+    } else {
+        res.redirect("/user/dashboard");
+    }
 });
 
 router.post(
-  "/project/startCollaboration",
-  checkAuthenticated,
-  async (req, res) => {
-    var roomId = req.body.projectRoomID;
-    const collabRoomId = await activeCollabRooms.findOne({
-      collabRoomID: roomId
-    });
-    if (collabRoomId == null) {
-      const query = new activeCollabRooms({
-        collabRoomID: roomId
-      });
-      await query.save();
+    "/startCollaboration",
+    checkAuthenticated,
+    async(req, res) => {
+        var roomId = req.body.projectRoomID;
+        const collabRoomId = await activeCollabRooms.findOne({
+            collabRoomID: roomId
+        });
+        if (collabRoomId == null) {
+            const query = new activeCollabRooms({
+                collabRoomID: roomId
+            });
+            await query.save();
+        }
+        res.send({ status: "success" });
     }
-    res.send({ status: "success" });
-  }
 );
 
 router.post(
-  "/project/stopCollaboration",
-  checkAuthenticated,
-  async (req, res) => {
-    var roomId = req.body.projectRoomID;
-    const collabRoomId = await activeCollabRooms.findOneAndDelete({
-      collabRoomID: roomId
-    });
-    res.send({ status: "success" });
-  }
+    "/stopCollaboration",
+    checkAuthenticated,
+    async(req, res) => {
+        var roomId = req.body.projectRoomID;
+        await activeCollabRooms.findOneAndDelete({
+            collabRoomID: roomId
+        });
+        res.send({ status: "success" });
+    }
 );
 
 module.exports = router;
