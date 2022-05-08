@@ -3,7 +3,7 @@ if (process.env.NODE_ENV != "production") {
 }
 async function findProjectRoom(userid, projectName) {
     const userProjects = await userProjectsFilesRooms.findOne({
-        userID: userid.toString(),
+        userId: userid.toString(),
         projectPath: path.join(
             __dirname,
             "../",
