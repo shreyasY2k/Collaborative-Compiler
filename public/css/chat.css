@@ -183,8 +183,16 @@
     background: #555;
 }
 
-.chat-log_author {
+
+/* .chat-log_author {
     margin: 0 auto 0em;
     font-size: 12px;
     font-weight: bold;
+} */
+
+.username {
+    margin-right: 3px;
+    font-size: 12px;
+    font-weight: lighter;
+    color: #555;
 }

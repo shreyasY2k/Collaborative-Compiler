@@ -333,12 +333,13 @@ function send() {
 }
 
 function addMsg(msg, userName, isHost) {
+    var currentdate = new Date();
+    var time = currentdate.getHours() + ":" +
+        currentdate.getMinutes() + ":" + currentdate.getSeconds();
     var div = document.createElement("div");
     div.innerHTML =
         `<span style='flex-grow:1'>
-        </span><div class='chat-message-sent'><div class="chat-log_author">
-        ${userName} ${isHost ? "(Host)" : "(Collaborator)"}
-      </div> <div>${msg}</div> </div>`;
+        </span><div class='chat-message-sent'><div>${msg}</div> <span class="username">You ${isHost ? "(Host)" : "(Collaborator)"} &bull; ${time} </span></div>`;
     div.className = "chat-message-div";
     document.getElementById("message-box").appendChild(div);
     document.getElementById("message").value = "";
@@ -354,10 +355,12 @@ function addMsg(msg, userName, isHost) {
 }
 
 function addResponseMsg(msg, userName, isHost) {
+    var currentdate = new Date();
+    var time = currentdate.getHours() + ":" +
+        currentdate.getMinutes() + ":" + currentdate.getSeconds();
     var div = document.createElement("div");
-    div.innerHTML = `<div class='chat-message-received'> <div class="chat-log_author">
-    ${userName} ${isHost ? "(Host)" : "(Collaborator)"}
-  </div> <div>${msg}</div></div>`;
+    div.innerHTML = `<div class='chat-message-received'>
+    <div>${msg}</div> <span class="username">${userName} ${isHost ? "(Host)" : "(Collaborator)"} &bull; ${time}</span></div>`;
     div.className = "chat-message-div";
     document.getElementById("message-box").appendChild(div);
     document.getElementById("message-box").scrollTop = document.getElementById(
