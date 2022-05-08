@@ -165,7 +165,7 @@ router.get("/download", checkAuthenticated, (req, res) => {
 router.get("/open", checkAuthenticated, async(req, res) => {
     const userId = req.user._id;
     const projectname = req.query.projectname;
-    const projectRoom = await findProjectRoom(userId, projectname);
+    const projectRoom = await findProjectRoom(userId.toString(), projectname);
     var fileList = fs
         .readdirSync(
             path.join(__dirname, "../", userId.toString() + "/" + projectname), {
