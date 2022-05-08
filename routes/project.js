@@ -4,11 +4,7 @@ if (process.env.NODE_ENV != "production") {
 async function findProjectRoom(userid, projectName) {
     const userProjects = await userProjectsFilesRooms.findOne({
         userId: userid.toString(),
-        projectPath: path.join(
-            __dirname,
-            "../",
-            userid.toString() + "/" + projectName
-        )
+        projectName: projectName
     });
     return userProjects;
 }
@@ -166,6 +162,7 @@ router.get("/open", checkAuthenticated, async(req, res) => {
     const userId = req.user._id;
     const projectname = req.query.projectname;
     const projectRoom = await findProjectRoom(userId.toString(), projectname);
+    console.log("projectRoom: " + projectRoom);
     var fileList = fs
         .readdirSync(
             path.join(__dirname, "../", userId.toString() + "/" + projectname), {
