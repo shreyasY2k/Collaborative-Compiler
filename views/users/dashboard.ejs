@@ -2,141 +2,144 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script>
-    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous" />
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" />
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-    <style>
-        .overlay {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: absolute;
-            z-index: 2;
-            opacity: 0;
-            background: rgba(39, 42, 43, 0.8);
-            transition: opacity 200ms ease-in-out;
-            border-radius: 4px;
-            margin: -15px 0 0 -15px;
-        }
-        
-        .overlay a {
-            margin: 5px;
-        }
-        
-        .overlay:hover {
-            opacity: 1;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <script src="https://kit.fontawesome.com/b99e675b6e.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer"
+    />
+    <title>DASHBOARD</title>
+    <link href="/css/dashboard.css" rel="stylesheet">
+    <link href="/css/dashboardStyle.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <div class="container">
+    <div class="wrapper">
+        <!-- <% if (error) { %>
+            <p class="alert alert-danger">
+                <%= error %>
+            </p>
+            <% } %> -->
 
-        <div class="page-header text-center">
-            <h1><span class="fa fa-anchor"></span> Profile Page</h1>
-            <form action="/user/logout" method="post">
-                <button type="submit" class="btn btn-danger btn-lg">Logout</button>
-            </form>
-        </div>
+        <div class="main">
+            <nav class="navbar navbar-expand navbar-light navbar-bg">
 
-        <div class="row">
+                <div class="navbar-collapse collapse">
+                    <h1 class="h1 animate-charcter">Dashboard</h1>
 
-            <!-- LOCAL INFORMATION -->
-            <div class="col-sm-6">
-                <div class="well">
-                    <h3><span class="fa fa-user"></span> Local</h3>
+                    <ul class="navbar-nav navbar-align">
 
-                    <p>
-                        <strong>Welcome</strong>:
-                        <%= name %><br>
-                    </p>
-
-                </div>
-
-                <%files.map( file => {%>
-                    <div class="panel panel-default">
-                        <div class="panel-body">
-                            <div class="overlay">
-                                <a href="/user/project/open?projectname=<%= file %>" class="btn btn-lg btn-success">Open</a>
-                                <a href="/user/project/download?projectname=<%= file %>" class="btn btn-lg btn-primary">Download</a>
-                                <a href="/user/project/delete?projectname=<%= file %>" class="btn btn-lg btn-danger">Delete</a>
-                            </div>
-                            <h3>
-                                <%= file%>
-                            </h3>
-                        </div>
-                    </div>
-                    <%})%>
-
-
-
-
-            </div>
-            <div class="col-2">
-                <div class="container">
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createProject">
-  Create a Project
-</button>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#joinRoom">
-  Join a Collaboration Session
-</button>
-                </div>
-            </div>
-
-        </div>
-        <div class="modal fade" id="createProject" role="dialog" aria-labelledby="createProject" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2 class="modal-title" id="exampleModalLongTitle">Create Project</h2>
-                    </div>
-                    <div class="modal-body">
-                        <form action="/user/project/create" method="post">
-                            <input type="text" class="form-control" id="projectName" name="projectName" placeholder="Project Name">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Create</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="modal fade" id="joinRoom" role="dialog" aria-labelledby="joinRoom" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2 class="modal-title" id="exampleModalLongTitle">Join Room</h2>
-                    </div>
-                    <div class="modal-body">
-                        <form action="/user/project/joinRoom" method="post">
-                            <input type="text" class="form-control" id="roomID" name="roomID" placeholder="Room ID">
-                    </div>
-                    <% if (error) { %>
-                        <p class="alert alert-danger">
-                            <%= error %>
-                        </p>
-                        <% } %>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                <button type="submit" class="btn btn-primary">Join</button>
+                        <li class="nav-item dropdown">
+                            <a class="nav-icon dropdown-toggle d-inline-block d-sm-none" href="#" data-bs-toggle="dropdown">
+                                <i class="align-middle" data-feather="settings"></i>
+                            </a>
+                            <a class="btn btn-outline-warning" type="button" data-bs-toggle="modal" data-bs-target="#joinRoom">Join collaboration</a>
+                            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+                                <img src="/img/avatars/avatar.jpg" class="avatar img-fluid rounded me-1" alt="<%= name %>" /> <span class="text-dark"><%= name %></span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <form action="/user/logout" method="post">
+                                    <button type="submit" class="dropdown-item"><i class="fas fa-sign-out-alt" style="margin-right: 10px;"></i>Log out</button>
                                 </form>
                             </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="modal fade" id="joinRoom">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+
+                            <!-- Modal Header -->
+                            <div class="modal-header">
+                                <h4 class="modal-title">Enter Room ID</h4>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <!-- Modal body -->
+                            <form action="/user/project/joinRoom" method="post">
+                                <div class="modal-body">
+                                    <input type="text" class="form-control input-lg" id="roomID" name="roomID" placeholder="Room ID" required>
+                                </div>
+
+                                <!-- Modal footer -->
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="content">
+                <div class="container-fluid p-0">
+                    <h1>Projects <button class="btn btn-outline-primary" style="margin: inherit;float: right;" data-bs-toggle="modal" data-bs-target="#createProject">Create Project</button></h1>
+
+                    <div id="projects" class="card-deck mx-auto row row-cols-1 row-cols-sm-3 row-cols-lg-5 row-cols-md-3 gap-6 mt-5">
+
+                        <% for(var i=0; i<files.length; i++) { %>
+                            <div style="height: 260px;">
+                                <div class="card col" style="width:17rem; display:block; margin-right:15px; ">
+                                    <img src="<%= image[i] %>" class="card-img-top" alt="...">
+                                    <div class="body">
+                                        <h1 class="card-title m-2 mb-2">
+                                            <%= files[i] %>
+                                        </h1>
+                                        <span style="margin:5px;" class="ml-2">
+                                        <a href="/user/project/open?projectname=<%= files[i] %>" class="btn btn-outline-success hovbutton mb-2"  type="button">Open</a>
+                                        <a href="/user/project/delete?projectname=<%= files[i] %>" class="btn btn-outline-danger hovbutton mb-2" id="del" type="button">Delete</a>
+                                        <a href="/user/project/download?projectname=<%= files[i] %>" class="btn btn-outline-info hovbutton mb-2"  type="button">Download</a>
+                                        </span>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <%}%>
+                    </div>
+
+
+                </div>
+        </div>
+        <div class="modal fade" id="createProject">
+            <div class="modal-dialog">
+                <div class="modal-content">
+
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h4 class="modal-title">Enter Project Name</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <!-- Modal body -->
+                    <form action="/user/project/create" method="post">
+                        <div class="modal-body">
+                            <input type="text" class="form-control input-lg" id="projectName" name="projectName" placeholder="Project Name" required>
+                        </div>
+
+                        <!-- Modal footer -->
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Create</button>
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
 
+        </main>
+
+
     </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js" integrity="sha512-pax4MlgXjHEPfCwcJLQhigY7+N8rt6bVvWLFyUMuxShv170X53TRzGPmPkZmGBhk+jikR8WBM4yl7A9WMHHqvg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- <script src="js/scripts.js"></script> -->
+
+
+
+
 </body>
 
 </html>

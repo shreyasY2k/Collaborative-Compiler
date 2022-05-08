@@ -1,3 +1,7 @@
+//Output only to room
+//Socket emit on get file only to requester
+//change emit events to broadcast so that sender doesnot need to wait for response
+
 if (process.env.NODE_ENV != "production") {
     require("dotenv").config();
 }
@@ -111,7 +115,15 @@ router.post("/create", checkAuthenticated, (req, res) => {
     //get list of folders inside user folder local
     const userFolder = path.join(__dirname, "../", userid.toString());
     const userFolderList = fs.readdirSync(userFolder);
+    var images = ['/img/photos/img1.jpg', '/img/photos/img2.jpg', '/img/photos/img3.jpg', '/img/photos/img4.jpg', '/img/photos/img5.jpg', '/img/photos/img6.jpg', '/img/photos/img7.jpg', '/img/photos/img8.jpg', '/img/photos/img9.jpg', '/img/photos/img10.jpg', '/img/photos/img11.jpg']
+        //create an aray of images equal to the number of folders
+    var imageArray = [];
+    for (var i = 0; i < userFolderList.length; i++) {
+        imageArray.push(images[Math.floor(Math.random() * images.length)]);
+    }
     res.render("users/dashboard", {
+        name: req.user.name,
+        image: imageArray,
         files: userFolderList,
         name: req.user.name,
         error: ''
@@ -270,7 +282,7 @@ io.on("connection", socket => {
         const query = userProjectsFilesRooms.findOne({ roomID: data.projectRoomID }, { files: { $elemMatch: { fileName: data.fileName } } });
         const file = await query.exec();
         socket.join(file.files[0].fileRoom);
-        io.to(file.files[0].fileRoom).emit("fileContent", {
+        socket.emit("fileContent", {
             fileRoomID: file.files[0].fileRoom,
             projectName: data.projectName,
             fileName: data.fileName,

@@ -1,0 +1,51 @@
+.card-title {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 50%;
+}
+
+.card:hover {
+    transform: scale(1.07);
+    box-shadow: 0 10px 20px rgba(255, 246, 246, 0.19), 0 4px 8px rgba(255, 255, 255, 001);
+    transition-duration: 0.25s;
+    transition-delay: 0s;
+}
+
+.hovbutton {
+    display: none;
+}
+
+.card:hover .hovbutton,
+.hovbutton:hover {
+    display: inline-block;
+}
+
+.animate-charcter {
+    text-transform: uppercase;
+    background-image: linear-gradient(-225deg, #231557 0%, #44107a 29%, #ff1361 67%, #fff800 100%);
+    background-size: auto auto;
+    background-clip: border-box;
+    background-size: 200% auto;
+    color: #fff;
+    background-clip: text;
+    /* text-fill-color: transparent; */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: textclip 2s linear infinite;
+    display: inline-block;
+    font-size: 22px;
+}
+
+@keyframes textclip {
+    to {
+        background-position: 200% center;
+    }
+}
+
+.fa-exclamation-triangle {
+    position: absolute;
+    right: 25px;
+    margin-top: -23px;
+    color: #ec1f1f
+}
