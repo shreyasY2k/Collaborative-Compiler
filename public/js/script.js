@@ -143,6 +143,16 @@ window.addEventListener("DOMContentLoaded", event => {
         document.querySelector("#projectRoomID") ?
             document.querySelector("#projectRoomID").remove() :
             null;
+
+        var ul = document.querySelector("#participants")
+        var li = document.createElement("li");
+        li.classList.add("list-group-item");
+        li.classList.add("d-flex");
+        li.classList.add("justify-content-between");
+        li.classList.add("align-items-center");
+        li.innerHTML = `<span>${userName[0].toUpperCase() + userName[userName.length - 1].toUpperCase()}</span>`;
+        li.setAttribute("name", userName);
+        ul.appendChild(li);
     });
     socket.on("updateFile", function(data) {
         console.log("updateFile", data.fileContent);
