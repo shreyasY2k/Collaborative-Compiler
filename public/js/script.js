@@ -5,6 +5,7 @@ var fileRoomID;
 var isHost = false;
 var userName;
 var editor;
+var fileName
 
 function addFile() {
     var fileName = document.querySelector("#fileName").value;
@@ -222,7 +223,7 @@ window.addEventListener("DOMContentLoaded", event => {
     });
     socket.on("fileContent", function(data) {
         var fileContent = data.fileContent;
-        var fileName = data.fileName;
+        fileName = data.fileName;
         fileRoomID = data.fileRoomID;
         //mark the li with file name as active
         var listGroupItems = document.querySelectorAll(".list-group-item");
@@ -292,8 +293,10 @@ window.addEventListener("DOMContentLoaded", event => {
         });
     });
     socket.on("text", function(data) {
-        // console.log(data);
-        editor.setValue(data);
+        //get current cursor position
+        var position = editor.getPosition();
+        editor.setValue(data.text);
+        editor.setPosition(position);
     })
     socket.on("autoSuggest", function(data) {
         if (data.data.answers.length == 0) {
@@ -424,6 +427,10 @@ function getFile(element) {
         .querySelector("#projectName")
         .innerText.toString()
         .trim();
+    //leave fileRoomID room 
+    socket.emit("leaveFileRoom", {
+        fileRoomID: fileRoomID
+    });
     //send request through socket to get the file content
     socket.emit("getFile", {
         projectPath: projectPath,
@@ -445,12 +452,12 @@ function removeEditor() {
 //on every key press in editor, send the content to the server with the file name and project name
 function sendFileContent() {
     //select the name of active file
-    var listGroupItems = document.querySelectorAll(".list-group-item");
-    for (var i = 0; i < listGroupItems.length; i++) {
-        if (listGroupItems[i].classList.contains("active")) {
-            var fileName = listGroupItems[i].innerText.toString().trim();
-        }
-    }
+    // var listGroupItems = document.querySelectorAll(".list-group-item");
+    // for (var i = 0; i < listGroupItems.length; i++) {
+    //     if (listGroupItems[i].classList.contains("active")) {
+    //         fileName = listGroupItems[i].innerText.toString().trim();
+    //     }
+    // }
 
     var editor = monaco.editor.getModels()[0];
     var projectName = document

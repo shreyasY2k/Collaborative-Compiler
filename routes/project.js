@@ -226,7 +226,9 @@ io.on("connection", socket => {
             io.to(data.projectRoomID).emit("addFile", data.fileName);
         }
     });
-
+    socket.on("leaveFileRoom", async data => {
+        socket.leave(data.fileRoomID);
+    })
     socket.on("deleteFile", async data => {
         if (fs.existsSync(path.join(data.projectPath, data.fileName))) {
             fs.unlinkSync(path.join(data.projectPath, data.fileName));
@@ -290,8 +292,7 @@ io.on("connection", socket => {
         });
     });
     socket.on('message', async data => {
-        // console.log(data);
-        socket.broadcast.to(data.fileRoomID).emit('text', data.text);
+        socket.broadcast.to(data.fileRoomID).emit('text', { text: data.text, fileName: data.fileName });
     })
     socket.on("updateFile", data => {
         fs.writeFileSync(
