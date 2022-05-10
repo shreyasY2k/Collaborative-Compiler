@@ -4,6 +4,7 @@ var projectRoomID;
 var fileRoomID;
 var isHost = false;
 var userName;
+var editor;
 
 function addFile() {
     var fileName = document.querySelector("#fileName").value;
@@ -154,9 +155,9 @@ window.addEventListener("DOMContentLoaded", event => {
         // li.setAttribute("name", userName);
         // ul.appendChild(li);
     });
-    socket.on("updateFile", function(data) {
-        console.log("updateFile", data.fileContent);
-    });
+    // socket.on("updateFileC", function(data) {
+    //     editor.setValue(data.fileContent);
+    // });
     socket.on("addFile", fileName => {
         var listGroup = document.querySelector(".list-group");
         var span = document.createElement("span");
@@ -265,6 +266,16 @@ window.addEventListener("DOMContentLoaded", event => {
             bracketPairColorization: true
         });
 
+
+        editor.onKeyUp(function(e) {
+            const text = editor.getValue();
+            socket.send({
+                text: text,
+                fileName: fileName,
+                fileRoomID: fileRoomID
+            });
+        });
+
         editor.onDidChangeModelContent(event => {
             sendFileContent();
             //if line starts with // and ends with .
@@ -280,7 +291,10 @@ window.addEventListener("DOMContentLoaded", event => {
             }
         });
     });
-
+    socket.on("text", function(data) {
+        // console.log(data);
+        editor.setValue(data);
+    })
     socket.on("autoSuggest", function(data) {
         if (data.data.answers.length == 0) {
             //get entire editor content and replace the line with the new line an set value
@@ -418,7 +432,7 @@ function getFile(element) {
         fileName: fileName
     });
 }
-var editor;
+
 
 function removeEditor() {
     if (editor) {

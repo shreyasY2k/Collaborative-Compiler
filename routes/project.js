@@ -289,13 +289,16 @@ io.on("connection", socket => {
             fileContent: fileContent
         });
     });
-
+    socket.on('message', async data => {
+        // console.log(data);
+        socket.broadcast.to(data.fileRoomID).emit('text', data.text);
+    })
     socket.on("updateFile", data => {
         fs.writeFileSync(
             path.join(data.projectPath, data.fileName),
             data.fileContent
         );
-        io.to(data.fileRoomID).emit("updateFile", {
+        socket.broadcast.to(data.fileRoomID).emit("updateFileC", {
             projectName: data.projectName,
             fileName: data.fileName,
             fileContent: data.fileContent
