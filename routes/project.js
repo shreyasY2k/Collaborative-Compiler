@@ -207,7 +207,10 @@ io.on("connection", socket => {
             isHost: isHost
         });
     });
-    //listen for addFile event
+    socket.on('leaveRoom', async data => {
+            socket.leave(data.projectRoomID);
+        })
+        //listen for addFile event
     socket.on("addFile", async data => {
         if (!fs.existsSync(path.join(data.projectPath, data.fileName))) {
             const fileRoomID = Math.random().toString(36).substring(7);

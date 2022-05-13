@@ -466,6 +466,11 @@ function getFile(element) {
     });
 }
 
+function leaveRoom() {
+    socket.emit("leaveRoom", {
+        projectRoomID: projectRoomID
+    });
+}
 
 function removeEditor() {
     if (editor) {
