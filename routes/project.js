@@ -294,6 +294,14 @@ io.on("connection", socket => {
     socket.on('message', async data => {
         socket.broadcast.to(data.fileRoomID).emit('text', { text: data.text, fileName: data.fileName });
     })
+    socket.on("cursorPositionChange", async data => {
+        var newData = {
+            userName: data.userName,
+            position: data.position,
+            id: socket.request.user._id.toString()
+        }
+        socket.broadcast.to(data.fileRoomID).emit("cursorPositionChanged", newData);
+    })
     socket.on("updateFile", data => {
         fs.writeFileSync(
             path.join(data.projectPath, data.fileName),

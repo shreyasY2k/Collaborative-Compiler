@@ -5,7 +5,9 @@ var fileRoomID;
 var isHost = false;
 var userName;
 var editor;
-var fileName
+var fileName;
+var remoteCursorManager;
+var remoteUserCursor;
 
 function addFile() {
     var fileName = document.querySelector("#fileName").value;
@@ -193,6 +195,21 @@ window.addEventListener("DOMContentLoaded", event => {
     socket.on("deleteFile", fileName => {
         deleteFileFromList(fileName);
     });
+    socket.on("cursorPositionChanged", data => {
+        remoteUserCursor ? remoteUserCursor.dispose() : null;
+        require(['vs/editor/editor.main', 'MonacoCollabExt'], function(m, MonacoCollabExt) {
+            remoteCursorManager = new MonacoCollabExt.RemoteCursorManager({
+                editor: editor,
+                tooltips: true,
+                tooltipDuration: 2
+            });
+            remoteUserCursor = remoteCursorManager.addCursor(data.id, "orange", data.userName);
+            console.log(remoteUserCursor);
+            // remoteUserCursor = remoteCursorManager.addCursor(sourceUser.id, sourceUser.color, sourceUser.label);
+            remoteUserCursor.setPosition({ lineNumber: data.position.lineNumber, column: data.position.column });
+            remoteUserCursor.show()
+        })
+    })
     const sidebarToggle = document.body.querySelector("#sidebarToggle");
     if (sidebarToggle) {
         sidebarToggle.addEventListener("click", event => {
@@ -252,7 +269,6 @@ window.addEventListener("DOMContentLoaded", event => {
         editorDiv.prepend(editorElement);
         document.querySelector("#compiler").classList.remove("d-none");
         document.querySelector("#compiler").classList.add("d-inline");
-        //add the model to the editor
         editor = monaco.editor.create(document.querySelector("#editor"), {
             model: model,
             theme: "vs-dark",
@@ -267,7 +283,16 @@ window.addEventListener("DOMContentLoaded", event => {
             bracketPairColorization: true
         });
 
-
+        //when cursor position changes, send the cursor position to the server
+        editor.onDidChangeCursorPosition(function(event) {
+            // console.log(event);
+            // remoteUserCursor ? remoteUserCursor.dispose() : null;
+            socket.emit("cursorPositionChange", {
+                fileRoomID: fileRoomID,
+                userName: userName,
+                position: event.position
+            });
+        })
         editor.onKeyUp(function(e) {
             const text = editor.getValue();
             socket.send({
@@ -291,6 +316,7 @@ window.addEventListener("DOMContentLoaded", event => {
                 });
             }
         });
+
     });
     socket.on("text", function(data) {
         //get current cursor position
