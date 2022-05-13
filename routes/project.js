@@ -92,7 +92,7 @@ io.use((socket, next) => {
 router.post("/create", checkAuthenticated, (req, res) => {
     //create folder for project inside user folder
     const userid = req.user._id;
-    const projectname = req.body.projectName;
+    const projectname = req.body.projectName.toString();
     fs.mkdirSync(
         path.join(__dirname, "../", userid.toString() + "/" + projectname), { recursive: true }
     );
@@ -132,7 +132,7 @@ router.post("/create", checkAuthenticated, (req, res) => {
 
 router.get("/delete", checkAuthenticated, async(req, res) => {
     const userid = req.user._id;
-    const projectname = req.query.projectname;
+    const projectname = req.query.projectname.toString();
     fs.rmSync(
         path.join(__dirname, "../", userid.toString() + "/" + projectname), { recursive: true }
     );
@@ -149,7 +149,7 @@ router.get("/delete", checkAuthenticated, async(req, res) => {
 
 router.get("/download", checkAuthenticated, (req, res) => {
     const userid = req.user._id;
-    const projectname = req.query.projectname;
+    const projectname = req.query.projectname.toString();
     zl.archiveFolder(
         path.join(__dirname, "../", userid.toString(), projectname.toString()),
         path.join(
@@ -172,7 +172,7 @@ router.get("/download", checkAuthenticated, (req, res) => {
 
 router.get("/open", checkAuthenticated, async(req, res) => {
     const userId = req.user._id;
-    const projectname = req.query.projectname;
+    const projectname = req.query.projectname.toString();
     const projectRoom = await findProjectRoom(userId.toString(), projectname);
     // console.log("projectRoom: " + projectRoom);
     var fileList = fs
@@ -268,7 +268,7 @@ io.on("connection", socket => {
             });
             await addFileName.exec();
             io.to(data.projectRoomID).emit("renameFile", {
-                projectName: data.projectName,
+                projectName: data.projectName.toString(),
                 oldFileName: data.oldFileName,
                 newFileName: data.newFileName
             });
@@ -286,7 +286,7 @@ io.on("connection", socket => {
         socket.join(file.files[0].fileRoom);
         socket.emit("fileContent", {
             fileRoomID: file.files[0].fileRoom,
-            projectName: data.projectName,
+            projectName: data.projectName.toString(),
             fileName: data.fileName,
             fileContent: fileContent
         });
@@ -308,7 +308,7 @@ io.on("connection", socket => {
             data.fileContent
         );
         socket.broadcast.to(data.fileRoomID).emit("updateFileC", {
-            projectName: data.projectName,
+            projectName: data.projectName.toString(),
             fileName: data.fileName,
             fileContent: data.fileContent
         });
@@ -369,7 +369,7 @@ router.post("/joinRoom", checkAuthenticated, async(req, res) => {
         res.render("project/editor", {
             isHost: false,
             files: fileList,
-            projectname: projectRoom.projectName,
+            projectname: projectRoom.projectName.toString(),
             projectRoomID: projectRoom.roomID
         });
     } else {
