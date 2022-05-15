@@ -8,8 +8,10 @@ var editor;
 var fileName;
 var remoteCursorManager;
 var remoteUserCursor;
+var restrictSharing = false;
 
 function addFile() {
+    if (!isHost && restrictSharing) return
     var fileName = document.querySelector("#fileName").value;
     if (!validateFileName(fileName)) {
         document.querySelector("#fileName").classList.remove("is-valid");
@@ -33,11 +35,13 @@ function addFile() {
         projectRoomID: projectRoomID,
         projectName: projectName,
         fileName: fileName,
-        fileContent: ""
+        fileContent: "",
     });
 }
 
 function editFileName(element) {
+    if (!isHost && restrictSharing) return
+
     if (!document.querySelector("#fileName")) {
         var fileName = element.parentElement.parentElement.innerText
             .toString()
@@ -62,6 +66,8 @@ function editFileName(element) {
 }
 
 function updateFileName(element) {
+    if (!isHost && restrictSharing) return
+
     var fileName = document.querySelector("#fileName").value;
     //check if the file name is empty or already exists
     if (!validateFileName(fileName)) {
@@ -90,11 +96,13 @@ function updateFileName(element) {
         oldFileName: element.parentElement.previousElementSibling.innerText
             .toString()
             .trim(),
-        listElement: element.parentElement.previousElementSibling.outerHTML
+        listElement: element.parentElement.previousElementSibling.outerHTML,
     });
 }
 
 function deleteFile(element) {
+    if (!isHost && restrictSharing) return
+
     if (!document.querySelector("#fileName")) {
         var fileName = element.parentElement.parentElement.innerText
             .toString()
@@ -109,7 +117,7 @@ function deleteFile(element) {
             projectPath: projectPath,
             projectRoomID: projectRoomID,
             projectName: projectName,
-            fileName: fileName
+            fileName: fileName,
         });
     }
 }
@@ -127,7 +135,7 @@ function deleteFileFromList(fileName) {
     }
 }
 
-window.addEventListener("DOMContentLoaded", event => {
+window.addEventListener("DOMContentLoaded", (event) => {
     var socketID = document
         .querySelector("#projectRoomID")
         .innerText.toString()
@@ -135,7 +143,7 @@ window.addEventListener("DOMContentLoaded", event => {
     socket = io.connect();
     socket.on("connect", function() {
         socket.emit("join", {
-            projectRoomID: socketID
+            projectRoomID: socketID,
         });
     });
 
@@ -144,24 +152,13 @@ window.addEventListener("DOMContentLoaded", event => {
         projectPath = data.projectPath;
         projectRoomID = data.projectRoomID;
         isHost = data.isHost;
+        restrictSharing = data.restrictSharing;
         document.querySelector("#projectRoomID") ?
             document.querySelector("#projectRoomID").remove() :
             null;
-
-        // var ul = document.querySelector("#participants")
-        // var li = document.createElement("li");
-        // li.classList.add("list-group-item");
-        // li.classList.add("d-flex");
-        // li.classList.add("justify-content-between");
-        // li.classList.add("align-items-center");
-        // li.innerHTML = `<span>${userName[0].toUpperCase() + userName[userName.length - 1].toUpperCase()}</span>`;
-        // li.setAttribute("name", userName);
-        // ul.appendChild(li);
     });
-    // socket.on("updateFileC", function(data) {
-    //     editor.setValue(data.fileContent);
-    // });
-    socket.on("addFile", fileName => {
+
+    socket.on("addFile", (fileName) => {
         var listGroup = document.querySelector(".list-group");
         var span = document.createElement("span");
         span.setAttribute(
@@ -175,7 +172,7 @@ window.addEventListener("DOMContentLoaded", event => {
             document.querySelector("#fileInputContainer").remove();
         }
     });
-    socket.on("renameFile", data => {
+    socket.on("renameFile", (data) => {
         var oldFileName = data.oldFileName;
         //remove the old filename from the file li containing the old name
         var listGroup = document.querySelector(".list-group");
@@ -192,27 +189,37 @@ window.addEventListener("DOMContentLoaded", event => {
         }
         deleteFileFromList(oldFileName);
     });
-    socket.on("deleteFile", fileName => {
+    socket.on("deleteFile", (fileName) => {
         deleteFileFromList(fileName);
     });
-    socket.on("cursorPositionChanged", data => {
+    socket.on("cursorPositionChanged", (data) => {
         remoteUserCursor ? remoteUserCursor.dispose() : null;
-        require(['vs/editor/editor.main', 'MonacoCollabExt'], function(m, MonacoCollabExt) {
+        require(["vs/editor/editor.main", "MonacoCollabExt"], function(
+            m,
+            MonacoCollabExt
+        ) {
             remoteCursorManager = new MonacoCollabExt.RemoteCursorManager({
                 editor: editor,
                 tooltips: true,
-                tooltipDuration: 2
+                tooltipDuration: 2,
             });
-            remoteUserCursor = remoteCursorManager.addCursor(data.id, "orange", data.userName);
+            remoteUserCursor = remoteCursorManager.addCursor(
+                data.id,
+                "orange",
+                data.userName
+            );
             console.log(remoteUserCursor);
             // remoteUserCursor = remoteCursorManager.addCursor(sourceUser.id, sourceUser.color, sourceUser.label);
-            remoteUserCursor.setPosition({ lineNumber: data.position.lineNumber, column: data.position.column });
-            remoteUserCursor.show()
-        })
-    })
+            remoteUserCursor.setPosition({
+                lineNumber: data.position.lineNumber,
+                column: data.position.column,
+            });
+            remoteUserCursor.show();
+        });
+    });
     const sidebarToggle = document.body.querySelector("#sidebarToggle");
     if (sidebarToggle) {
-        sidebarToggle.addEventListener("click", event => {
+        sidebarToggle.addEventListener("click", (event) => {
             event.preventDefault();
             document.body.classList.toggle("sb-sidenav-toggled");
         });
@@ -235,7 +242,7 @@ window.addEventListener("DOMContentLoaded", event => {
             listGroup.prepend(listGroupItem);
         }
     });
-    document.querySelector("#compile").addEventListener("click", e => {
+    document.querySelector("#compile").addEventListener("click", (e) => {
         compileIt();
     });
     socket.on("fileContent", function(data) {
@@ -276,33 +283,38 @@ window.addEventListener("DOMContentLoaded", event => {
             fontSize: 14,
             fontFamily: "Consolas, 'Courier New', monospace",
             lightbulb: {
-                enabled: true
+                enabled: true,
             },
             matchBrackets: true,
             autoClosingQuotes: "always",
-            bracketPairColorization: true
+            bracketPairColorization: true,
         });
 
         //when cursor position changes, send the cursor position to the server
         editor.onDidChangeCursorPosition(function(event) {
-            // console.log(event);
-            // remoteUserCursor ? remoteUserCursor.dispose() : null;
+            if (!isHost && restrictSharing) return
+                // console.log(event);
+                // remoteUserCursor ? remoteUserCursor.dispose() : null;
             socket.emit("cursorPositionChange", {
                 fileRoomID: fileRoomID,
                 userName: userName,
-                position: event.position
+                position: event.position,
             });
-        })
+        });
         editor.onKeyUp(function(e) {
+            if (!isHost && restrictSharing) return
+
             const text = editor.getValue();
             socket.send({
                 text: text,
                 fileName: fileName,
-                fileRoomID: fileRoomID
+                fileRoomID: fileRoomID,
             });
         });
 
-        editor.onDidChangeModelContent(event => {
+        editor.onDidChangeModelContent((event) => {
+            if (!isHost && restrictSharing) return
+
             sendFileContent();
             //if line starts with // and ends with .
             var lineNumber = editor.getPosition().lineNumber;
@@ -312,18 +324,17 @@ window.addEventListener("DOMContentLoaded", event => {
                 socket.emit("autoSuggest", {
                     fileRoomID: fileRoomID,
                     lineNumber: lineNumber,
-                    lineContent: lineContent
+                    lineContent: lineContent,
                 });
             }
         });
-
     });
     socket.on("text", function(data) {
         //get current cursor position
         var position = editor.getPosition();
         editor.setValue(data.text);
         editor.setPosition(position);
-    })
+    });
     socket.on("autoSuggest", function(data) {
         if (data.data.answers.length == 0) {
             //get entire editor content and replace the line with the new line an set value
@@ -369,15 +380,17 @@ document.getElementById("message").addEventListener("keyup", function(event) {
 });
 document.getElementById("chatbot_toggle").onclick = function() {
     if (document.getElementById("chatbot").classList.contains("collapsed")) {
-        document.getElementById("chatbot").classList.remove("collapsed")
-        document.getElementById("chatbot_toggle").children[0].style.display = "none"
-        document.getElementById("chatbot_toggle").children[1].style.display = ""
+        document.getElementById("chatbot").classList.remove("collapsed");
+        document.getElementById("chatbot_toggle").children[0].style.display =
+            "none";
+        document.getElementById("chatbot_toggle").children[1].style.display = "";
     } else {
-        document.getElementById("chatbot").classList.add("collapsed")
-        document.getElementById("chatbot_toggle").children[0].style.display = ""
-        document.getElementById("chatbot_toggle").children[1].style.display = "none"
+        document.getElementById("chatbot").classList.add("collapsed");
+        document.getElementById("chatbot_toggle").children[0].style.display = "";
+        document.getElementById("chatbot_toggle").children[1].style.display =
+            "none";
     }
-}
+};
 
 function send() {
     var msg = document.getElementById("message").value;
@@ -387,38 +400,47 @@ function send() {
 
 function addMsg(msg, userName, isHost) {
     var currentdate = new Date();
-    var time = currentdate.getHours() + ":" +
-        currentdate.getMinutes() + ":" + currentdate.getSeconds();
+    var time =
+        currentdate.getHours() +
+        ":" +
+        currentdate.getMinutes() +
+        ":" +
+        currentdate.getSeconds();
     var div = document.createElement("div");
-    div.innerHTML =
-        `<span style='flex-grow:1'>
-        </span><div class='chat-message-sent'><div>${msg}</div> <span class="username">You ${isHost ? "(Host)" : "(Collaborator)"} &bull; ${time} </span></div>`;
+    div.innerHTML = `<span style='flex-grow:1'>
+        </span><div class='chat-message-sent'><div>${msg}</div> <span class="username">You ${
+    isHost ? "(Host)" : "(Collaborator)"
+  } &bull; ${time} </span></div>`;
     div.className = "chat-message-div";
     document.getElementById("message-box").appendChild(div);
     document.getElementById("message").value = "";
-    document.getElementById("message-box").scrollTop = document.getElementById(
-        "message-box"
-    ).scrollHeight;
+    document.getElementById("message-box").scrollTop =
+        document.getElementById("message-box").scrollHeight;
     socket.emit("chat", {
         message: msg,
         projectRoomID: projectRoomID,
         userName: userName,
-        isHost: isHost
+        isHost: isHost,
     });
 }
 
 function addResponseMsg(msg, userName, isHost) {
     var currentdate = new Date();
-    var time = currentdate.getHours() + ":" +
-        currentdate.getMinutes() + ":" + currentdate.getSeconds();
+    var time =
+        currentdate.getHours() +
+        ":" +
+        currentdate.getMinutes() +
+        ":" +
+        currentdate.getSeconds();
     var div = document.createElement("div");
     div.innerHTML = `<div class='chat-message-received'>
-    <div>${msg}</div> <span class="username">${userName} ${isHost ? "(Host)" : "(Collaborator)"} &bull; ${time}</span></div>`;
+    <div>${msg}</div> <span class="username">${userName} ${
+    isHost ? "(Host)" : "(Collaborator)"
+  } &bull; ${time}</span></div>`;
     div.className = "chat-message-div";
     document.getElementById("message-box").appendChild(div);
-    document.getElementById("message-box").scrollTop = document.getElementById(
-        "message-box"
-    ).scrollHeight;
+    document.getElementById("message-box").scrollTop =
+        document.getElementById("message-box").scrollHeight;
 }
 
 function validateFileName(fileName) {
@@ -453,22 +475,22 @@ function getFile(element) {
         .querySelector("#projectName")
         .innerText.toString()
         .trim();
-    //leave fileRoomID room 
+    //leave fileRoomID room
     socket.emit("leaveFileRoom", {
-        fileRoomID: fileRoomID
+        fileRoomID: fileRoomID,
     });
     //send request through socket to get the file content
     socket.emit("getFile", {
         projectPath: projectPath,
         projectRoomID: projectRoomID,
         projectName: projectName,
-        fileName: fileName
+        fileName: fileName,
     });
 }
 
 function leaveRoom() {
     socket.emit("leaveRoom", {
-        projectRoomID: projectRoomID
+        projectRoomID: projectRoomID,
     });
 }
 
@@ -501,7 +523,7 @@ function sendFileContent() {
         fileRoomID: fileRoomID,
         projectName: projectName,
         fileName: fileName,
-        fileContent: fileContent
+        fileContent: fileContent,
     });
 }
 
@@ -515,8 +537,8 @@ function compileIt() {
             standardIn: document
                 .querySelector("#stdin")
                 .value.split(/[|]+/)
-                .join("\n")
-        })
+                .join("\n"),
+        }),
     });
 }
 
@@ -524,16 +546,16 @@ function manageCollaboration() {
     fetch("/user/project/startCollaboration", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                projectRoomID: projectRoomID
-            })
+                projectRoomID: projectRoomID,
+            }),
         })
-        .then(res => {
+        .then((res) => {
             return res.json();
         })
-        .then(data => {
+        .then((data) => {
             if (data.status === "success") {
                 initializeCollabStyles();
             }
@@ -569,16 +591,16 @@ function stopCollaboration() {
     fetch("/user/project/stopCollaboration", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                projectRoomID: projectRoomID
-            })
+                projectRoomID: projectRoomID,
+            }),
         })
-        .then(res => {
+        .then((res) => {
             return res.json();
         })
-        .then(data => {
+        .then((data) => {
             if (data.status === "success") {
                 document.querySelector("#manageCollaboration").innerText =
                     "Start Collaboration";
@@ -597,7 +619,6 @@ function stopCollaboration() {
                 roomIDListItem.classList.add("d-none");
             }
         });
-
 }
 
 function copy() {

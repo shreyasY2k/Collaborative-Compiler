@@ -1,7 +1,10 @@
 const mongoose = require("mongoose");
-const activeCollabRoomsSchema = new mongoose.Schema({ collabRoomID: String });
+const activeCollabRoomsSchema = new mongoose.Schema({
+    collabRoomID: String,
+    restrictSharing: Boolean,
+});
 const activeCollabRooms = mongoose.model(
-  "activeCollabRooms",
-  activeCollabRoomsSchema
+    "activeCollabRooms",
+    activeCollabRoomsSchema
 );
 module.exports = activeCollabRooms;

@@ -8,13 +8,13 @@ if (process.env.NODE_ENV != "production") {
 async function findProjectRoom(userid, projectName) {
     const userProjects = await userProjectsFilesRooms.findOne({
         userId: userid.toString(),
-        projectName: projectName
+        projectName: projectName,
     });
     return userProjects;
 }
 async function findProjectRoomById(roomid) {
     const userProjects = await userProjectsFilesRooms.findOne({
-        roomID: roomid.toString()
+        roomID: roomid.toString(),
     });
     return userProjects;
 }
@@ -63,7 +63,7 @@ const userProjectsFilesRooms = require("../models/userProjectsFilesRooms");
 const activeCollabRooms = require("../models/activeCollabRooms");
 AWS.config.update({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 var s3 = new AWS.S3();
 router.use(express.urlencoded({ extended: false }));
@@ -71,7 +71,7 @@ router.use(express.json());
 const sessionMiddleware = session({
     secret: process.env.SECRET,
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
 });
 router.use(flash());
 router.use(sessionMiddleware);
@@ -108,15 +108,27 @@ router.post("/create", checkAuthenticated, (req, res) => {
             "../",
             userid.toString() + "/" + projectname
         ),
-        files: []
+        files: [],
     });
     userProjectsFilesRoomsSchema.save();
 
     //get list of folders inside user folder local
     const userFolder = path.join(__dirname, "../", userid.toString());
     const userFolderList = fs.readdirSync(userFolder);
-    var images = ['/img/photos/img1.jpg', '/img/photos/img2.jpg', '/img/photos/img3.jpg', '/img/photos/img4.jpg', '/img/photos/img5.jpg', '/img/photos/img6.jpg', '/img/photos/img7.jpg', '/img/photos/img8.jpg', '/img/photos/img9.jpg', '/img/photos/img10.jpg', '/img/photos/img11.jpg']
-        //create an aray of images equal to the number of folders
+    var images = [
+        "/img/photos/img1.jpg",
+        "/img/photos/img2.jpg",
+        "/img/photos/img3.jpg",
+        "/img/photos/img4.jpg",
+        "/img/photos/img5.jpg",
+        "/img/photos/img6.jpg",
+        "/img/photos/img7.jpg",
+        "/img/photos/img8.jpg",
+        "/img/photos/img9.jpg",
+        "/img/photos/img10.jpg",
+        "/img/photos/img11.jpg",
+    ];
+    //create an aray of images equal to the number of folders
     var imageArray = [];
     for (var i = 0; i < userFolderList.length; i++) {
         imageArray.push(images[Math.floor(Math.random() * images.length)]);
@@ -126,7 +138,7 @@ router.post("/create", checkAuthenticated, (req, res) => {
         image: imageArray,
         files: userFolderList,
         name: req.user.name,
-        error: ''
+        error: "",
     });
 });
 
@@ -142,7 +154,7 @@ router.get("/delete", checkAuthenticated, async(req, res) => {
     // );
     await userProjectsFilesRooms.deleteOne({
         userId: userid.toString(),
-        projectname: projectname
+        projectname: projectname,
     });
     res.redirect("/user/dashboard");
 });
@@ -178,24 +190,27 @@ router.get("/open", checkAuthenticated, async(req, res) => {
     var fileList = fs
         .readdirSync(
             path.join(__dirname, "../", userId.toString() + "/" + projectname), {
-                withFileTypes: true
+                withFileTypes: true,
             }
         )
-        .filter(item => !item.isDirectory())
-        .map(item => item.name);
+        .filter((item) => !item.isDirectory())
+        .map((item) => item.name);
     res.render("project/editor", {
         isHost: true,
         files: fileList,
         projectname: projectname,
         projectRoomID: projectRoom.roomID,
-        projectPath: projectRoom.projectPath
+        projectPath: projectRoom.projectPath,
     });
 });
 
-io.on("connection", socket => {
-    socket.on("join", async data => {
+io.on("connection", (socket) => {
+    socket.on("join", async(data) => {
         var isHost = false;
         var userPRooms = await findProjectRoomById(data.projectRoomID);
+        var restrictSharing = await activeCollabRooms.findOne({
+            roomID: data.projectRoomID,
+        });
         if (userPRooms.userId.toString() === socket.request.user._id.toString()) {
             isHost = true;
         }
@@ -204,22 +219,23 @@ io.on("connection", socket => {
             userName: socket.request.user.name,
             projectPath: userPRooms.projectPath,
             projectRoomID: userPRooms.roomID,
-            isHost: isHost
+            isHost: isHost,
+            restrictSharing: restrictSharing.restrictSharing,
         });
     });
-    socket.on('leaveRoom', async data => {
-            socket.leave(data.projectRoomID);
-        })
-        //listen for addFile event
-    socket.on("addFile", async data => {
+    socket.on("leaveRoom", async(data) => {
+        socket.leave(data.projectRoomID);
+    });
+    //listen for addFile event
+    socket.on("addFile", async(data) => {
         if (!fs.existsSync(path.join(data.projectPath, data.fileName))) {
             const fileRoomID = Math.random().toString(36).substring(7);
             const query = userProjectsFilesRooms.updateOne({ roomID: data.projectRoomID }, {
                 $push: {
                     files: {
-                        $each: [{ fileName: data.fileName, fileRoom: fileRoomID }]
-                    }
-                }
+                        $each: [{ fileName: data.fileName, fileRoom: fileRoomID }],
+                    },
+                },
             });
             await query.exec();
             fs.writeFileSync(
@@ -229,17 +245,17 @@ io.on("connection", socket => {
             io.to(data.projectRoomID).emit("addFile", data.fileName);
         }
     });
-    socket.on("leaveFileRoom", async data => {
+    socket.on("leaveFileRoom", async(data) => {
         socket.leave(data.fileRoomID);
-    })
-    socket.on("deleteFile", async data => {
+    });
+    socket.on("deleteFile", async(data) => {
         if (fs.existsSync(path.join(data.projectPath, data.fileName))) {
             fs.unlinkSync(path.join(data.projectPath, data.fileName));
             //remove file from database
             const query = userProjectsFilesRooms.updateOne({ roomID: data.projectRoomID }, {
                 $pull: {
-                    files: { fileName: data.fileName }
-                }
+                    files: { fileName: data.fileName },
+                },
             });
             await query.exec();
             io.to(data.projectRoomID).emit("deleteFile", data.fileName);
@@ -247,7 +263,7 @@ io.on("connection", socket => {
     });
 
     //listen for renameFile event
-    socket.on("renameFile", async data => {
+    socket.on("renameFile", async(data) => {
         if (fs.existsSync(path.join(data.projectPath, data.oldFileName))) {
             fs.renameSync(
                 path.join(data.projectPath, data.oldFileName),
@@ -258,26 +274,26 @@ io.on("connection", socket => {
 
             const deleteFileName = userProjectsFilesRooms.updateOne({ roomID: data.projectRoomID }, {
                 $pull: {
-                    files: { fileName: data.oldFileName }
-                }
+                    files: { fileName: data.oldFileName },
+                },
             });
             await deleteFileName.exec();
             const addFileName = userProjectsFilesRooms.updateOne({ roomID: data.projectRoomID }, {
                 $push: {
                     files: {
-                        $each: [{ fileName: data.newFileName, fileRoom: newFileRoomID }]
-                    }
-                }
+                        $each: [{ fileName: data.newFileName, fileRoom: newFileRoomID }],
+                    },
+                },
             });
             await addFileName.exec();
             io.to(data.projectRoomID).emit("renameFile", {
                 projectName: data.projectName.toString(),
                 oldFileName: data.oldFileName,
-                newFileName: data.newFileName
+                newFileName: data.newFileName,
             });
         }
     });
-    socket.on("getFile", async data => {
+    socket.on("getFile", async(data) => {
         //get file content
         const fileContent = fs.readFileSync(
             path.join(data.projectPath, data.fileName),
@@ -291,21 +307,26 @@ io.on("connection", socket => {
             fileRoomID: file.files[0].fileRoom,
             projectName: data.projectName.toString(),
             fileName: data.fileName,
-            fileContent: fileContent
+            fileContent: fileContent,
         });
     });
-    socket.on('message', async data => {
-        socket.broadcast.to(data.fileRoomID).emit('text', { text: data.text, fileName: data.fileName });
+    socket.on("changeFileSharing", async(data) => {
+
     })
-    socket.on("cursorPositionChange", async data => {
+    socket.on("message", async(data) => {
+        socket.broadcast
+            .to(data.fileRoomID)
+            .emit("text", { text: data.text, fileName: data.fileName });
+    });
+    socket.on("cursorPositionChange", async(data) => {
         var newData = {
             userName: data.userName,
             position: data.position,
-            id: socket.request.user._id.toString()
-        }
+            id: socket.request.user._id.toString(),
+        };
         socket.broadcast.to(data.fileRoomID).emit("cursorPositionChanged", newData);
-    })
-    socket.on("updateFile", data => {
+    });
+    socket.on("updateFile", (data) => {
         fs.writeFileSync(
             path.join(data.projectPath, data.fileName),
             data.fileContent
@@ -313,10 +334,10 @@ io.on("connection", socket => {
         socket.broadcast.to(data.fileRoomID).emit("updateFileC", {
             projectName: data.projectName.toString(),
             fileName: data.fileName,
-            fileContent: data.fileContent
+            fileContent: data.fileContent,
         });
     });
-    socket.on("autoSuggest", file => {
+    socket.on("autoSuggest", (file) => {
         var question = file.lineContent;
         var fileRoomID = file.fileRoomID;
         //fetch request to codegrepper
@@ -325,42 +346,43 @@ io.on("connection", socket => {
                 question +
                 "&search_options=search_titles"
             )
-            .then(res => res.json())
-            .then(data => {
+            .then((res) => res.json())
+            .then((data) => {
                 io.to(fileRoomID).emit("autoSuggest", {
                     data: data,
-                    lineNumber: file.lineNumber
+                    lineNumber: file.lineNumber,
                 });
             });
     });
 
-    socket.on("chat", data => {
+    socket.on("chat", (data) => {
         socket.broadcast.to(data.projectRoomID).emit("chat", {
             userName: data.userName,
             message: data.message,
-            isHost: data.isHost
+            isHost: data.isHost,
         });
-    })
+    });
 
-
-    socket.on("compile", async file => {
+    socket.on("compile", async(file) => {
         var fileRoomID = file.fileRoomID;
         await fetch("https://codeorbored.herokuapp.com", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "text/plain"
+                    "Content-Type": "text/plain",
                 },
-                body: file.body
+                body: file.body,
             })
-            .then(response => {
+            .then((response) => {
                 return response.json();
             })
-            .then(data => {
+            .then((data) => {
                 io.to(fileRoomID).emit("compileOutput", { output: data.output });
             })
-            .catch(error => alert(error.message));
+            .catch((error) => alert(error.message));
     });
-    socket.on("disconnect", () => {});
+    socket.on("disconnect", () => {
+        // socket.close()
+    });
 });
 
 router.post("/joinRoom", checkAuthenticated, async(req, res) => {
@@ -373,41 +395,34 @@ router.post("/joinRoom", checkAuthenticated, async(req, res) => {
             isHost: false,
             files: fileList,
             projectname: projectRoom.projectName.toString(),
-            projectRoomID: projectRoom.roomID
+            projectRoomID: projectRoom.roomID,
         });
     } else {
         res.redirect("/user/dashboard");
     }
 });
 
-router.post(
-    "/startCollaboration",
-    checkAuthenticated,
-    async(req, res) => {
-        var roomId = req.body.projectRoomID;
-        const collabRoomId = await activeCollabRooms.findOne({
-            collabRoomID: roomId
+router.post("/startCollaboration", checkAuthenticated, async(req, res) => {
+    var roomId = req.body.projectRoomID;
+    const collabRoomId = await activeCollabRooms.findOne({
+        collabRoomID: roomId,
+    });
+    if (collabRoomId == null) {
+        const query = new activeCollabRooms({
+            collabRoomID: roomId,
+            restrictSharing: false,
         });
-        if (collabRoomId == null) {
-            const query = new activeCollabRooms({
-                collabRoomID: roomId
-            });
-            await query.save();
-        }
-        res.send({ status: "success" });
+        await query.save();
     }
-);
+    res.send({ status: "success" });
+});
 
-router.post(
-    "/stopCollaboration",
-    checkAuthenticated,
-    async(req, res) => {
-        var roomId = req.body.projectRoomID;
-        await activeCollabRooms.findOneAndDelete({
-            collabRoomID: roomId
-        });
-        res.send({ status: "success" });
-    }
-);
+router.post("/stopCollaboration", checkAuthenticated, async(req, res) => {
+    var roomId = req.body.projectRoomID;
+    await activeCollabRooms.findOneAndDelete({
+        collabRoomID: roomId,
+    });
+    res.send({ status: "success" });
+});
 
 module.exports = router;
