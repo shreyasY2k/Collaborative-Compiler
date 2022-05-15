@@ -192,6 +192,9 @@ window.addEventListener("DOMContentLoaded", (event) => {
     socket.on("deleteFile", (fileName) => {
         deleteFileFromList(fileName);
     });
+    socket.on("restrictEdit", (data) => {
+        restrictSharing = data.restrictSharing;
+    })
     socket.on("cursorPositionChanged", (data) => {
         remoteUserCursor ? remoteUserCursor.dispose() : null;
         require(["vs/editor/editor.main", "MonacoCollabExt"], function(
@@ -379,13 +382,13 @@ document.getElementById("message").addEventListener("keyup", function(event) {
     }
 });
 document.getElementById("chatbot_toggle").onclick = function() {
-    if (document.getElementById("chatbot").classList.contains("collapsed")) {
-        document.getElementById("chatbot").classList.remove("collapsed");
+    if (document.getElementById("chatbot").classList.contains("chat-collapsed")) {
+        document.getElementById("chatbot").classList.remove("chat-collapsed");
         document.getElementById("chatbot_toggle").children[0].style.display =
             "none";
         document.getElementById("chatbot_toggle").children[1].style.display = "";
     } else {
-        document.getElementById("chatbot").classList.add("collapsed");
+        document.getElementById("chatbot").classList.add("chat-collapsed");
         document.getElementById("chatbot_toggle").children[0].style.display = "";
         document.getElementById("chatbot_toggle").children[1].style.display =
             "none";
@@ -563,6 +566,17 @@ function manageCollaboration() {
 }
 
 function initializeCollabStyles() {
+    var ul = document.querySelector(".navbar-nav");
+    var li = document.createElement("li");
+    li.className = "form-check form-switch nav-item px-lg-1 py-1 py-lg-0";
+    li.style.color = "white";
+    li.style.margin = 'auto';
+    li.innerHTML = `
+    <span>
+    Restrict Editing</span>
+    <input onclick="restrictEdit()" class="form-check-input" type="checkbox" role="switch" id="restrictEdit">
+    `;
+    ul.insertBefore(li, ul.firstChild);
     document.querySelector("#manageCollaboration").innerText =
         "Stop Collaboration";
     document.querySelector("#back").style.display = "none";
@@ -580,11 +594,29 @@ function initializeCollabStyles() {
     roomIDListItem.classList.add("d-block");
     roomIDListItem.innerHTML = `<div class="clipboard input-group">
 <input onclick="copy()" class="copy-input form-control" value="${projectRoomID}" id="copyClipboard" readonly>
-<button class="copy-btn btn" id="copyButton" onclick="copy()"><i class="far fa-copy"></i></button>
+<button class="copy-btn" id="copyButton" onclick="copy()"><i class="far fa-copy"></i></button>
 </div>
 <div id="copied-success" class="copied">
   <span>&nbsp&nbspCopied!&nbsp&nbsp</span>
 </div>`;
+}
+
+function restrictEdit() {
+    if (document.querySelector("#restrictEdit").checked) {
+        restrictSharing = true;
+        document.querySelector("#restrictEdit").previousElementSibling.style.color = "#25D366";
+        socket.emit("restrictEdit", {
+            projectRoomID: projectRoomID,
+            restrictSharing: true
+        });
+    } else {
+        restrictSharing = false;
+        document.querySelector("#restrictEdit").previousElementSibling.style.color = "white";
+        socket.emit("restrictEdit", {
+            projectRoomID: projectRoomID,
+            restrictSharing: false
+        });
+    }
 }
 
 function stopCollaboration() {
@@ -602,6 +634,8 @@ function stopCollaboration() {
         })
         .then((data) => {
             if (data.status === "success") {
+                var ul = document.querySelector(".navbar-nav");
+                ul.firstElementChild.remove();
                 document.querySelector("#manageCollaboration").innerText =
                     "Start Collaboration";
                 document.querySelector("#back").style.display = "block";

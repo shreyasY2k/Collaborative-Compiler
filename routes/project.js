@@ -207,10 +207,14 @@ router.get("/open", checkAuthenticated, async(req, res) => {
 io.on("connection", (socket) => {
     socket.on("join", async(data) => {
         var isHost = false;
+        var restrictSharing = false
         var userPRooms = await findProjectRoomById(data.projectRoomID);
-        var restrictSharing = await activeCollabRooms.findOne({
-            roomID: data.projectRoomID,
+        var collabID = await activeCollabRooms.findOne({
+            collabRoomID: data.projectRoomID
         });
+        if (collabID) {
+            restrictSharing = collabID.restrictSharing
+        }
         if (userPRooms.userId.toString() === socket.request.user._id.toString()) {
             isHost = true;
         }
@@ -220,9 +224,22 @@ io.on("connection", (socket) => {
             projectPath: userPRooms.projectPath,
             projectRoomID: userPRooms.roomID,
             isHost: isHost,
-            restrictSharing: restrictSharing.restrictSharing,
+            restrictSharing: restrictSharing,
         });
     });
+    socket.on("restrictEdit", async(data) => {
+        var collabID = await activeCollabRooms.findOne({
+            collabRoomID: data.projectRoomID
+        });
+        if (collabID) {
+            collabID.restrictSharing = data.restrictSharing
+            collabID.save()
+        }
+        io.to(data.projectRoomID).emit("restrictEdit", {
+            restrictSharing: data.restrictSharing
+        });
+
+    })
     socket.on("leaveRoom", async(data) => {
         socket.leave(data.projectRoomID);
     });
