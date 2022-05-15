@@ -373,6 +373,14 @@ window.addEventListener("DOMContentLoaded", (event) => {
     socket.on("chat", function(data) {
         addResponseMsg(data.message, data.userName, data.isHost);
     });
+    socket.on("stopCollaboration", function() {
+        if (confirm("Host has stopped collaboration")) {
+            window.location.href = "/user/dashboard";
+        } else {
+            window.location.href = "/user/dashboard";
+
+        }
+    })
 });
 
 document.getElementById("message").addEventListener("keyup", function(event) {
@@ -651,6 +659,9 @@ function stopCollaboration() {
                 var roomIDListItem = document.querySelector("#roomIdLi");
                 roomIDListItem.classList.remove("d-block");
                 roomIDListItem.classList.add("d-none");
+                socket.emit("stopCollaboration", {
+                    projectRoomID: projectRoomID
+                })
             }
         });
 }

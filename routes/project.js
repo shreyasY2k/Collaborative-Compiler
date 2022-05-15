@@ -179,6 +179,15 @@ router.get("/download", checkAuthenticated, (req, res) => {
                 projectname.toString() + ".zip"
             )
         );
+        //delete the zip file after download
+        fs.unlinkSync(
+            path.join(
+                __dirname,
+                "../",
+                userid.toString(),
+                projectname.toString() + ".zip"
+            )
+        );
     });
 });
 
@@ -207,13 +216,13 @@ router.get("/open", checkAuthenticated, async(req, res) => {
 io.on("connection", (socket) => {
     socket.on("join", async(data) => {
         var isHost = false;
-        var restrictSharing = false
+        var restrictSharing = false;
         var userPRooms = await findProjectRoomById(data.projectRoomID);
         var collabID = await activeCollabRooms.findOne({
-            collabRoomID: data.projectRoomID
+            collabRoomID: data.projectRoomID,
         });
         if (collabID) {
-            restrictSharing = collabID.restrictSharing
+            restrictSharing = collabID.restrictSharing;
         }
         if (userPRooms.userId.toString() === socket.request.user._id.toString()) {
             isHost = true;
@@ -229,17 +238,16 @@ io.on("connection", (socket) => {
     });
     socket.on("restrictEdit", async(data) => {
         var collabID = await activeCollabRooms.findOne({
-            collabRoomID: data.projectRoomID
+            collabRoomID: data.projectRoomID,
         });
         if (collabID) {
-            collabID.restrictSharing = data.restrictSharing
-            collabID.save()
+            collabID.restrictSharing = data.restrictSharing;
+            collabID.save();
         }
         io.to(data.projectRoomID).emit("restrictEdit", {
-            restrictSharing: data.restrictSharing
+            restrictSharing: data.restrictSharing,
         });
-
-    })
+    });
     socket.on("leaveRoom", async(data) => {
         socket.leave(data.projectRoomID);
     });
@@ -327,9 +335,7 @@ io.on("connection", (socket) => {
             fileContent: fileContent,
         });
     });
-    socket.on("changeFileSharing", async(data) => {
-
-    })
+    socket.on("changeFileSharing", async(data) => {});
     socket.on("message", async(data) => {
         socket.broadcast
             .to(data.fileRoomID)
@@ -396,6 +402,9 @@ io.on("connection", (socket) => {
                 io.to(fileRoomID).emit("compileOutput", { output: data.output });
             })
             .catch((error) => alert(error.message));
+    });
+    socket.on("stopCollaboration", async(data) => {
+        socket.broadcast.to(data.projectRoomID).emit("stopCollaboration");
     });
     socket.on("disconnect", () => {
         // socket.close()
