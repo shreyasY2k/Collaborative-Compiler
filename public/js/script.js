@@ -208,7 +208,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
     });
     socket.on("restrictEdit", (data) => {
         restrictSharing = data.restrictSharing;
-        // restrictSharing && !isHost && editor != undefined ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
+        restrictSharing && !isHost && editor != undefined ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
     })
     socket.on("cursorPositionChanged", (data) => {
         remoteUserCursor ? remoteUserCursor.dispose() : null;
