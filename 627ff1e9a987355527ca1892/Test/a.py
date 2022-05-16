@@ -1,4 +1,1 @@
-hello www werwraqqaaaaajj
-kamsjdnjnsmknkandkaa
-hhdaa jj
-hhdjj
+print("Hello")

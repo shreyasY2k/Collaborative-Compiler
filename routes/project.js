@@ -2,6 +2,76 @@
 //Socket emit on get file only to requester
 //change emit events to broadcast so that sender doesnot need to wait for response
 
+const fileExtLanguage = {
+    "c": "C",
+    "cpp": "C++",
+    "php": "PHP",
+    "pl": "Perl",
+    "py": "Python 3",
+    "rb": "Ruby",
+    "go": "GO Lang",
+    "scala": "Scala",
+    "bash": "Bash Shell",
+    "sql": "SQL",
+    "pas": "Pascal",
+    "cs": "C#",
+    "vb": "VB.Net",
+    "hs": "Haskell",
+    "m": "Objective C",
+    "swift": "Swift",
+    "groovy": "Groovy",
+    "f90": "Fortran",
+    "lua": "Lua",
+    "tcl": "TCL",
+    "hack": "Hack",
+    "rs": "RUST",
+    "d": "D",
+    "ada": "Ada",
+    "java": "Java",
+    "r": "R Language",
+    "bas": "FREE BASIC",
+    "sv": "VERILOG",
+    "cbl": "COBOL",
+    "dart": "Dart",
+    "yabasic": "YaBasic",
+    "clj": "Clojure",
+    "js": "NodeJS",
+    "scheme": "Scheme",
+    "forth": "Forth",
+    "prolog": "Prolog",
+    "octave": "Octave",
+    "litcoffee": "CoffeeScript",
+    "icon": "Icon",
+    "fs": "F#",
+    "nasm": "Assembler - NASM",
+    "gccasm": "Assembler - GCC",
+    "intercal": "Intercal",
+    "nemerle": "Nemerle",
+    "ocaml": "Ocaml",
+    "unlambda": "Unlambda",
+    "picolisp": "Picolisp",
+    "spidermonkey": "SpiderMonkey",
+    "rhino": "Rhino JS",
+    "clisp": "CLISP",
+    "elixir": "Elixir",
+    "factor": "Factor",
+    "falcon": "Falcon",
+    "fantom": "Fantom",
+    "nim": "Nim",
+    'pike': 'Pike',
+    'smalltalk': 'Smalltalk',
+    "mozart": "OZ Mozart",
+    "lol": "LOL Code",
+    "Racket": "Racket",
+    "kt": "Kotlin",
+    "whitespace": "Whitespace",
+    "erlang": "Erlang",
+    "jlang": "J"
+}
+
+
+
+
 if (process.env.NODE_ENV != "production") {
     require("dotenv").config();
 }
@@ -327,12 +397,15 @@ io.on("connection", (socket) => {
         //search the files array in room id document for the file name
         const query = userProjectsFilesRooms.findOne({ roomID: data.projectRoomID }, { files: { $elemMatch: { fileName: data.fileName } } });
         const file = await query.exec();
+        var fileLanguage = fileExtLanguage[data.fileName.split(".")[1].toString()];
         socket.join(file.files[0].fileRoom);
         socket.emit("fileContent", {
             fileRoomID: file.files[0].fileRoom,
             projectName: data.projectName.toString(),
             fileName: data.fileName,
             fileContent: fileContent,
+            language: fileLanguage ? fileLanguage : "C",
+
         });
     });
     socket.on("changeFileSharing", async(data) => {});

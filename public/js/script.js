@@ -10,6 +10,17 @@ var remoteCursorManager;
 var remoteUserCursor;
 var restrictSharing = false;
 
+
+function addLoader() {
+    var loader = document.querySelector("#loader");
+    loader.style.display = "block";
+}
+
+function removeLoader() {
+    var loader = document.querySelector("#loader");
+    loader.style.display = "none";
+}
+
 function addFile() {
     if (!isHost && restrictSharing) return
     var fileName = document.querySelector("#fileName").value;
@@ -148,11 +159,14 @@ window.addEventListener("DOMContentLoaded", (event) => {
     });
 
     socket.on("roomDetails", function(data) {
+
         userName = data.userName;
         projectPath = data.projectPath;
         projectRoomID = data.projectRoomID;
         isHost = data.isHost;
         restrictSharing = data.restrictSharing;
+        console.log(data);
+        restrictSharing && !isHost ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
         document.querySelector("#projectRoomID") ?
             document.querySelector("#projectRoomID").remove() :
             null;
@@ -194,6 +208,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
     });
     socket.on("restrictEdit", (data) => {
         restrictSharing = data.restrictSharing;
+        restrictSharing && !isHost ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
     })
     socket.on("cursorPositionChanged", (data) => {
         remoteUserCursor ? remoteUserCursor.dispose() : null;
@@ -211,7 +226,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
                 "orange",
                 data.userName
             );
-            console.log(remoteUserCursor);
+            // console.log(remoteUserCursor);
             // remoteUserCursor = remoteCursorManager.addCursor(sourceUser.id, sourceUser.color, sourceUser.label);
             remoteUserCursor.setPosition({
                 lineNumber: data.position.lineNumber,
@@ -249,8 +264,13 @@ window.addEventListener("DOMContentLoaded", (event) => {
         compileIt();
     });
     socket.on("fileContent", function(data) {
+
         var fileContent = data.fileContent;
         fileName = data.fileName;
+        //get the selected dropdown language
+        var select = document.querySelector("#dropdown-language")
+        select.value = languageList[data.language];
+
         fileRoomID = data.fileRoomID;
         //mark the li with file name as active
         var listGroupItems = document.querySelectorAll(".list-group-item");
@@ -292,8 +312,8 @@ window.addEventListener("DOMContentLoaded", (event) => {
             autoClosingQuotes: "always",
             bracketPairColorization: true,
         });
-
-        //when cursor position changes, send the cursor position to the server
+        restrictSharing && !isHost ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
+            //when cursor position changes, send the cursor position to the server
         editor.onDidChangeCursorPosition(function(event) {
             if (!isHost && restrictSharing) return
                 // console.log(event);
@@ -368,7 +388,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
     });
     socket.on("compileOutput", function(data) {
         document.getElementById("opscreen").style.visibility = "visible";
-        document.getElementById("output").innerHTML = data.output;
+        document.getElementById("output").innerText = data.output;
     });
     socket.on("chat", function(data) {
         addResponseMsg(data.message, data.userName, data.isHost);
@@ -554,6 +574,7 @@ function compileIt() {
 }
 
 function manageCollaboration() {
+    addLoader();
     fetch("/user/project/startCollaboration", {
             method: "POST",
             headers: {
@@ -574,6 +595,8 @@ function manageCollaboration() {
 }
 
 function initializeCollabStyles() {
+    // document.querySelector("#chatbot").classList.remove("d-none")
+    // document.querySelector("#chatbot").classList.add("d-block")
     var ul = document.querySelector(".navbar-nav");
     var li = document.createElement("li");
     li.className = "form-check form-switch nav-item px-lg-1 py-1 py-lg-0";
@@ -607,6 +630,7 @@ function initializeCollabStyles() {
 <div id="copied-success" class="copied">
   <span>&nbsp&nbspCopied!&nbsp&nbsp</span>
 </div>`;
+    removeLoader();
 }
 
 function restrictEdit() {
@@ -628,6 +652,7 @@ function restrictEdit() {
 }
 
 function stopCollaboration() {
+    addLoader();
     fetch("/user/project/stopCollaboration", {
             method: "POST",
             headers: {
@@ -642,28 +667,35 @@ function stopCollaboration() {
         })
         .then((data) => {
             if (data.status === "success") {
-                var ul = document.querySelector(".navbar-nav");
-                ul.firstElementChild.remove();
-                document.querySelector("#manageCollaboration").innerText =
-                    "Start Collaboration";
-                document.querySelector("#back").style.display = "block";
-                document
-                    .querySelector("#manageCollaboration")
-                    .setAttribute("onclick", "manageCollaboration()");
-                document
-                    .querySelector("#manageCollaboration")
-                    .classList.remove("btn-outline-danger");
-                document
-                    .querySelector("#manageCollaboration")
-                    .classList.add("btn-outline-success");
-                var roomIDListItem = document.querySelector("#roomIdLi");
-                roomIDListItem.classList.remove("d-block");
-                roomIDListItem.classList.add("d-none");
+                cleanupCollabStyles();
                 socket.emit("stopCollaboration", {
                     projectRoomID: projectRoomID
                 })
             }
         });
+}
+
+function cleanupCollabStyles() {
+    // document.querySelector("#chatbot").classList.remove("d-block")
+    // document.querySelector("#chatbot").classList.add("d-none")
+    var ul = document.querySelector(".navbar-nav");
+    ul.firstElementChild.remove();
+    document.querySelector("#manageCollaboration").innerText =
+        "Start Collaboration";
+    document.querySelector("#back").style.display = "block";
+    document
+        .querySelector("#manageCollaboration")
+        .setAttribute("onclick", "manageCollaboration()");
+    document
+        .querySelector("#manageCollaboration")
+        .classList.remove("btn-outline-danger");
+    document
+        .querySelector("#manageCollaboration")
+        .classList.add("btn-outline-success");
+    var roomIDListItem = document.querySelector("#roomIdLi");
+    roomIDListItem.classList.remove("d-block");
+    roomIDListItem.classList.add("d-none");
+    removeLoader();
 }
 
 function copy() {
