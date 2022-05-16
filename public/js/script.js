@@ -165,8 +165,8 @@ window.addEventListener("DOMContentLoaded", (event) => {
         projectRoomID = data.projectRoomID;
         isHost = data.isHost;
         restrictSharing = data.restrictSharing;
-        console.log(data);
-        restrictSharing && !isHost && editor ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
+        // console.log(data);
+        // restrictSharing && !isHost && editor != undefined ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
         document.querySelector("#projectRoomID") ?
             document.querySelector("#projectRoomID").remove() :
             null;
@@ -208,7 +208,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
     });
     socket.on("restrictEdit", (data) => {
         restrictSharing = data.restrictSharing;
-        restrictSharing && !isHost && editor ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
+        // restrictSharing && !isHost && editor != undefined ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
     })
     socket.on("cursorPositionChanged", (data) => {
         remoteUserCursor ? remoteUserCursor.dispose() : null;
@@ -312,7 +312,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
             autoClosingQuotes: "always",
             bracketPairColorization: true,
         });
-        restrictSharing && !isHost && editor ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
+        restrictSharing && !isHost && editor != undefined ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
             //when cursor position changes, send the cursor position to the server
         editor.onDidChangeCursorPosition(function(event) {
             if (!isHost && restrictSharing) return
