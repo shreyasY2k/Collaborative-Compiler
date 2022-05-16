@@ -165,6 +165,10 @@ window.addEventListener("DOMContentLoaded", (event) => {
         projectRoomID = data.projectRoomID;
         isHost = data.isHost;
         restrictSharing = data.restrictSharing;
+        if (!isHost) {
+            document.querySelector("#chatbot").classList.remove("d-none")
+            document.querySelector("#chatbot").classList.add("d-flex")
+        }
         // console.log(data);
         // restrictSharing && !isHost && editor != undefined ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
         document.querySelector("#projectRoomID") ?
@@ -595,8 +599,8 @@ function manageCollaboration() {
 }
 
 function initializeCollabStyles() {
-    // document.querySelector("#chatbot").classList.remove("d-none")
-    // document.querySelector("#chatbot").classList.add("d-block")
+    document.querySelector("#chatbot").classList.remove("d-none")
+    document.querySelector("#chatbot").classList.add("d-flex")
     var ul = document.querySelector(".navbar-nav");
     var li = document.createElement("li");
     li.className = "form-check form-switch nav-item px-lg-1 py-1 py-lg-0";
@@ -676,8 +680,8 @@ function stopCollaboration() {
 }
 
 function cleanupCollabStyles() {
-    // document.querySelector("#chatbot").classList.remove("d-block")
-    // document.querySelector("#chatbot").classList.add("d-none")
+    document.querySelector("#chatbot").classList.remove("d-flex")
+    document.querySelector("#chatbot").classList.add("d-none")
     var ul = document.querySelector(".navbar-nav");
     ul.firstElementChild.remove();
     document.querySelector("#manageCollaboration").innerText =
