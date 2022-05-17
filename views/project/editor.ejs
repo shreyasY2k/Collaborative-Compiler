@@ -35,20 +35,6 @@
         const userID = '<%= userID %>'
         var projectRoomID = '<%= projectRoomID %>'
     </script>
-    <style>
-        #video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, 300px);
-            grid-auto-rows: 300px;
-        }
-        
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-    </style>
-
 </head>
 
 <body onload="addlist()">
@@ -76,11 +62,13 @@
             <!-- Top navigation-->
             <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
                 <div class="container-fluid">
-                    <div class="d-flex justify-content-center" style="align-items: baseline;">
+                    <div id="tutorial" class="d-flex justify-content-center" style="align-items: baseline;">
                         <a id="sidebarToggle"><i class="fa fa-lg fa-code"></i></a>
-                        <a style="margin-left: 10px;" id="tutorial" class="btn btn-outline-info">Tutorial</a></div>
-                    <!-- <ul id="participants">
-                    </ul> -->
+                        <a style="margin-left: 10px;" id="tutorial" class="btn btn-outline-info">Tutorial</a>
+                        <!--<button style="margin-left: 10px;" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>
+                   
+                        --></div>
+
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
                     <div class="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul class="navbar-nav ms-auto mt-2 mt-lg-0">

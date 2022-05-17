@@ -155,29 +155,6 @@ window.addEventListener("DOMContentLoaded", (event) => {
             projectRoomID: socketID,
         });
     });
-    peer = new Peer(userID)
-    peer.on("open", () => {
-        const myVideo = document.createElement('video')
-        myVideo.muted = true
-        navigator.mediaDevices.getUserMedia({
-            video: false,
-            audio: true
-        }).then(stream => {
-            addVideoStream(myVideo, stream)
-
-            peer.on('call', call => {
-                call.answer(stream)
-                const video = document.createElement('video')
-                call.on('stream', userVideoStream => {
-                    addVideoStream(video, userVideoStream)
-                })
-            })
-
-            socket.on('userJoinned', data => { // If a new user connect
-                connectToNewUser(data.id, stream)
-            })
-        })
-    })
     socket.on("roomDetails", function(data) {
         userName = data.userName;
         projectPath = data.projectPath;
@@ -410,6 +387,9 @@ window.addEventListener("DOMContentLoaded", (event) => {
             editor.setPosition(cursorPosition);
         }
     });
+    socket.on('userJoinned', data => {
+        connectToNewUser(data.id, stream)
+    })
     socket.on("compileOutput", function(data) {
         document.getElementById("opscreen").style.visibility = "visible";
         document.getElementById("output").innerText = data.output;
@@ -643,6 +623,30 @@ function manageCollaboration() {
 }
 
 function initializeCollabStyles() {
+    peer = new Peer(userID)
+    peer.on("open", () => {
+        const myVideo = document.createElement('video')
+        myVideo.muted = true
+        navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: true
+        }).then(stream => {
+            addVideoStream(myVideo, stream)
+
+            peer.on('call', call => {
+                call.answer(stream)
+                const video = document.createElement('video')
+                call.on('stream', userVideoStream => {
+                    addVideoStream(video, userVideoStream)
+                })
+            })
+            peer.on('close', () => {
+                stopBothVideoAndAudio(stream)
+            })
+        })
+    })
+    var navBar = document.querySelector("#tutorial")
+    navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
     document.querySelector("#chatbot").classList.remove("d-none")
     document.querySelector("#chatbot").classList.add("d-flex")
     var ul = document.querySelector(".navbar-nav");
@@ -681,6 +685,14 @@ function initializeCollabStyles() {
     removeLoader();
 }
 
+function stopBothVideoAndAudio(stream) {
+    stream.getTracks().forEach(function(track) {
+        if (track.readyState == 'live') {
+            track.stop();
+        }
+    });
+}
+
 function restrictEdit() {
     if (document.querySelector("#restrictEdit").checked) {
         restrictSharing = true;
@@ -701,6 +713,7 @@ function restrictEdit() {
 
 function stopCollaboration() {
     addLoader();
+    peer.destroy()
     fetch("/user/project/stopCollaboration", {
             method: "POST",
             headers: {
@@ -724,6 +737,7 @@ function stopCollaboration() {
 }
 
 function cleanupCollabStyles() {
+    document.querySelector("#mic").remove();
     document.querySelector("#chatbot").classList.remove("d-flex")
     document.querySelector("#chatbot").classList.add("d-none")
     var ul = document.querySelector(".navbar-nav");
