@@ -1,4 +1,5 @@
 var socket;
+var peer;
 var projectPath;
 var projectRoomID;
 var fileRoomID;
@@ -9,6 +10,7 @@ var fileName;
 var remoteCursorManager;
 var remoteUserCursor;
 var restrictSharing = false;
+const videoGrid = document.getElementById('video-grid')
 
 
 function addLoader() {
@@ -157,14 +159,39 @@ window.addEventListener("DOMContentLoaded", (event) => {
             projectRoomID: socketID,
         });
     });
+    peer = new Peer(document
+        .querySelector("#userID")
+        .innerText.toString()
+        .trim())
+    peer.on("open", () => {
+        const myVideo = document.createElement('video')
+        myVideo.muted = true
+        navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: true
+        }).then(stream => {
+            addVideoStream(myVideo, stream)
 
+            peer.on('call', call => {
+                call.answer(stream)
+                const video = document.createElement('video')
+                call.on('stream', userVideoStream => {
+                    addVideoStream(video, userVideoStream)
+                })
+            })
+
+            socket.on('userJoinned', data => { // If a new user connect
+                connectToNewUser(data.id, stream)
+            })
+        })
+    })
     socket.on("roomDetails", function(data) {
-
         userName = data.userName;
         projectPath = data.projectPath;
         projectRoomID = data.projectRoomID;
         isHost = data.isHost;
         restrictSharing = data.restrictSharing;
+
         if (!isHost) {
             document.querySelector("#chatbot").classList.remove("d-none")
             document.querySelector("#chatbot").classList.add("d-flex")
@@ -175,6 +202,11 @@ window.addEventListener("DOMContentLoaded", (event) => {
             document.querySelector("#projectRoomID").remove() :
             null;
     });
+    socket.on("newUser", function(data) {
+        console.log(data.userName + " joined the room");
+        const call = peer.call(data.roomID, stream);
+
+    })
 
     socket.on("addFile", (fileName) => {
         var listGroup = document.querySelector(".list-group");
@@ -426,6 +458,28 @@ document.getElementById("chatbot_toggle").onclick = function() {
             "none";
     }
 };
+
+function connectToNewUser(userId, stream) { // This runs when someone joins our room
+    const call = peer.call(userId, stream) // Call the user who just joined
+        // Add their video
+    const video = document.createElement('video')
+    call.on('stream', userVideoStream => {
+            addVideoStream(video, userVideoStream)
+        })
+        // If they leave, remove their video
+    call.on('close', () => {
+        video.remove()
+    })
+}
+
+
+function addVideoStream(video, stream) {
+    video.srcObject = stream
+    video.addEventListener('loadedmetadata', () => { // Play the video as it loads
+        video.play()
+    })
+    videoGrid.append(video) // Append video element to videoGrid
+}
 
 function send() {
     var msg = document.getElementById("message").value;

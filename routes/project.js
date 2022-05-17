@@ -280,6 +280,7 @@ router.get("/open", checkAuthenticated, async(req, res) => {
         projectname: projectname,
         projectRoomID: projectRoom.roomID,
         projectPath: projectRoom.projectPath,
+        userID: userId.toString()
     });
 });
 
@@ -305,6 +306,11 @@ io.on("connection", (socket) => {
             isHost: isHost,
             restrictSharing: restrictSharing,
         });
+        io.to(userPRooms.roomID).emit("userJoinned", {
+            userName: socket.request.user.name,
+            roomID: userPRooms.roomID,
+            id: socket.request.user._id
+        })
     });
     socket.on("restrictEdit", async(data) => {
         var collabID = await activeCollabRooms.findOne({
@@ -495,6 +501,7 @@ router.post("/joinRoom", checkAuthenticated, async(req, res) => {
             files: fileList,
             projectname: projectRoom.projectName.toString(),
             projectRoomID: projectRoom.roomID,
+            userID: req.user._id.toString()
         });
     } else {
         res.redirect("/user/dashboard");
