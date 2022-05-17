@@ -10,7 +10,7 @@ var fileName;
 var remoteCursorManager;
 var remoteUserCursor;
 var restrictSharing = false;
-const videoGrid = document.getElementById('video-grid')
+// const videoGrid = document.getElementById('video-grid')
 
 
 function addLoader() {
@@ -159,10 +159,6 @@ window.addEventListener("DOMContentLoaded", (event) => {
             projectRoomID: socketID,
         });
     });
-    peer = new Peer(document
-        .querySelector("#userID")
-        .innerText.toString()
-        .trim())
     peer.on("open", () => {
         const myVideo = document.createElement('video')
         myVideo.muted = true
@@ -180,7 +176,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
                 })
             })
 
-            socket.on('userJoinned', data => { // If a new user connect
+            socket.on('userJoinned', data => {
                 connectToNewUser(data.id, stream)
             })
         })
@@ -191,7 +187,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
         projectRoomID = data.projectRoomID;
         isHost = data.isHost;
         restrictSharing = data.restrictSharing;
-
+        peer = new Peer(data.userID)
         if (!isHost) {
             document.querySelector("#chatbot").classList.remove("d-none")
             document.querySelector("#chatbot").classList.add("d-flex")
@@ -475,10 +471,10 @@ function connectToNewUser(userId, stream) { // This runs when someone joins our 
 
 function addVideoStream(video, stream) {
     video.srcObject = stream
-    video.addEventListener('loadedmetadata', () => { // Play the video as it loads
-        video.play()
-    })
-    videoGrid.append(video) // Append video element to videoGrid
+    video.addEventListener('loadedmetadata', () => {
+            video.play()
+        })
+        // videoGrid.append(video) 
 }
 
 function send() {
