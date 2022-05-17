@@ -389,9 +389,6 @@ window.addEventListener("DOMContentLoaded", (event) => {
             editor.setPosition(cursorPosition);
         }
     });
-    socket.on('userJoinned', data => {
-        connectToNewUser(data.id, stream)
-    })
     socket.on("compileOutput", function(data) {
         document.getElementById("opscreen").style.visibility = "visible";
         document.getElementById("output").innerText = data.output;
@@ -646,6 +643,9 @@ function initializeCollabStyles() {
                 stopBothVideoAndAudio(stream)
             })
         })
+    })
+    socket.on('userJoinned', data => {
+        connectToNewUser(data.id, stream)
     })
     var navBar = document.querySelector("#tutorial")
     navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
