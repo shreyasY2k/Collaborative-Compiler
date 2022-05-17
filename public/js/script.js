@@ -168,6 +168,31 @@ window.addEventListener("DOMContentLoaded", (event) => {
             document.querySelector("#chatbot").classList.add("d-flex")
             var navBar = document.querySelector("#tutorial")
             navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
+            peer = new Peer(userID)
+            peer.on("open", () => {
+                const myVideo = document.createElement('video')
+                myVideo.muted = false
+                navigator.mediaDevices.getUserMedia({
+                    video: false,
+                    audio: true
+                }).then(stream => {
+                    addVideoStream(myVideo, stream)
+                    localStream = stream
+                    peer.on('call', call => {
+                        call.answer(stream)
+                        const video = document.createElement('video')
+                        call.on('stream', userVideoStream => {
+                            addVideoStream(video, userVideoStream)
+                        })
+                    })
+                    peer.on('close', () => {
+                        stopBothVideoAndAudio(stream)
+                    })
+                    socket.on('userJoinned', data => {
+                        connectToNewUser(data.id, stream)
+                    })
+                })
+            })
         }
     });
     socket.on("newUser", function(data) {
