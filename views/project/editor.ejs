@@ -31,6 +31,10 @@
     <link rel="stylesheet" href="/monaco-collab-ext/css/monaco-collab-ext.css">
     <script src="/monaco-collab-ext/umd/monaco-collab-ext.js"></script>
     <link href="/css/styles.css" rel="stylesheet" />
+    <script>
+        const userID = '<%= userID %>'
+        var projectRoomID = '<%= projectRoomID %>'
+    </script>
     <style>
         #video-grid {
             display: grid;
@@ -50,13 +54,6 @@
 <body onload="addlist()">
     <div id="video-grid" style="display: none;"></div>
     <div class="loader" id="loader" style="display: none;"></div>
-
-    <div id="projectRoomID" style="display: none;">
-        <%= projectRoomID %>
-    </div>
-    <div id="userID" style="display: none;">
-        <%= userID %>
-    </div>
     <div class="d-flex" id="wrapper">
         <!-- Sidebar-->
         <div class="border-end bg-dark" id="sidebar-wrapper">

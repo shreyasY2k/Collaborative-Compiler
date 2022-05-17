@@ -1,7 +1,6 @@
 var socket;
 var peer;
 var projectPath;
-var projectRoomID;
 var fileRoomID;
 var isHost = false;
 var userName;
@@ -149,20 +148,14 @@ function deleteFileFromList(fileName) {
 }
 
 window.addEventListener("DOMContentLoaded", (event) => {
-    var socketID = document
-        .querySelector("#projectRoomID")
-        .innerText.toString()
-        .trim();
+    var socketID = projectRoomID
     socket = io.connect();
     socket.on("connect", function() {
         socket.emit("join", {
             projectRoomID: socketID,
         });
     });
-    peer = new Peer(document
-        .querySelector("#userID")
-        .innerText.toString()
-        .trim())
+    peer = new Peer(userID)
     peer.on("open", () => {
         const myVideo = document.createElement('video')
         myVideo.muted = true
@@ -196,11 +189,6 @@ window.addEventListener("DOMContentLoaded", (event) => {
             document.querySelector("#chatbot").classList.remove("d-none")
             document.querySelector("#chatbot").classList.add("d-flex")
         }
-        // console.log(data);
-        // restrictSharing && !isHost && editor != undefined ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
-        document.querySelector("#projectRoomID") ?
-            document.querySelector("#projectRoomID").remove() :
-            null;
     });
     socket.on("newUser", function(data) {
         console.log(data.userName + " joined the room");
@@ -430,11 +418,13 @@ window.addEventListener("DOMContentLoaded", (event) => {
         addResponseMsg(data.message, data.userName, data.isHost);
     });
     socket.on("stopCollaboration", function() {
-        if (confirm("Host has stopped collaboration")) {
-            window.location.href = "/user/dashboard";
-        } else {
-            window.location.href = "/user/dashboard";
+        if (!isHost) {
+            if (confirm("Host has stopped collaboration")) {
+                window.location.href = "/user/dashboard";
+            } else {
+                window.location.href = "/user/dashboard";
 
+            }
         }
     })
 });
@@ -764,4 +754,11 @@ function copy() {
 
     $("#copied-success").fadeIn(800);
     $("#copied-success").fadeOut(800);
+}
+
+//on window reload send disconnect message to server
+window.onbeforeunload = function(e) {
+    socket.emit("disconnectusers", {
+        projectRoomID: projectRoomID
+    });
 }

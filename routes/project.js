@@ -486,7 +486,10 @@ io.on("connection", (socket) => {
         socket.broadcast.to(data.projectRoomID).emit("stopCollaboration");
     });
     socket.on("disconnect", () => {
-        // socket.close()
+
+    });
+    socket.on("disconnectusers", (data) => {
+        socket.broadcast.to(data.projectRoomID).emit("stopCollaboration");
     });
 });
 
