@@ -642,11 +642,12 @@ function initializeCollabStyles() {
             peer.on('close', () => {
                 stopBothVideoAndAudio(stream)
             })
+            socket.on('userJoinned', data => {
+                connectToNewUser(data.id, stream)
+            })
         })
     })
-    socket.on('userJoinned', data => {
-        connectToNewUser(data.id, stream)
-    })
+
     var navBar = document.querySelector("#tutorial")
     navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
     document.querySelector("#chatbot").classList.remove("d-none")
