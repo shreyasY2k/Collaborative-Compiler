@@ -744,7 +744,7 @@ function restrictEdit() {
 
 function stopCollaboration() {
     addLoader();
-    peer.destroy()
+    // peer.destroy()
     fetch("/user/project/stopCollaboration", {
             method: "POST",
             headers: {
