@@ -9,7 +9,7 @@ var fileName;
 var remoteCursorManager;
 var remoteUserCursor;
 var restrictSharing = false;
-// const videoGrid = document.getElementById('video-grid')
+const videoGrid = document.getElementById('video-grid')
 
 
 function addLoader() {
@@ -448,9 +448,9 @@ function connectToNewUser(userId, stream) { // This runs when someone joins our 
 function addVideoStream(video, stream) {
     video.srcObject = stream
     video.addEventListener('loadedmetadata', () => {
-            video.play()
-        })
-        // videoGrid.append(video) 
+        video.play()
+    })
+    videoGrid.append(video)
 }
 
 function send() {
@@ -628,7 +628,7 @@ function initializeCollabStyles() {
     peer = new Peer(userID)
     peer.on("open", () => {
         const myVideo = document.createElement('video')
-        myVideo.muted = false
+        myVideo.muted = true
         navigator.mediaDevices.getUserMedia({
             video: false,
             audio: true
