@@ -165,6 +165,8 @@ window.addEventListener("DOMContentLoaded", (event) => {
         if (!isHost) {
             document.querySelector("#chatbot").classList.remove("d-none")
             document.querySelector("#chatbot").classList.add("d-flex")
+            var navBar = document.querySelector("#tutorial")
+            navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
         }
     });
     socket.on("newUser", function(data) {
