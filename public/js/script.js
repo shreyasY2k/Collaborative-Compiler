@@ -800,9 +800,11 @@ function copy() {
 }
 
 window.onbeforeunload = function(e) {
-    socket.emit("disconnectusers", {
-        projectRoomID: projectRoomID
-    });
+    if (isHost) {
+        socket.emit("disconnectusers", {
+            projectRoomID: projectRoomID
+        });
+    }
 }
 
 function muteUnmute() {
