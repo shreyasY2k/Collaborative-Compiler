@@ -9,6 +9,7 @@ var fileName;
 var remoteCursorManager;
 var remoteUserCursor;
 var restrictSharing = false;
+var localStream;
 const videoGrid = document.getElementById('video-grid')
 
 
@@ -625,13 +626,13 @@ function initializeCollabStyles() {
     peer = new Peer(userID)
     peer.on("open", () => {
         const myVideo = document.createElement('video')
-        myVideo.muted = true
+        myVideo.muted = false
         navigator.mediaDevices.getUserMedia({
             video: false,
             audio: true
         }).then(stream => {
             addVideoStream(myVideo, stream)
-
+            localStream = stream
             peer.on('call', call => {
                 call.answer(stream)
                 const video = document.createElement('video')
