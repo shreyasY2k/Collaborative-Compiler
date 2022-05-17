@@ -159,6 +159,10 @@ window.addEventListener("DOMContentLoaded", (event) => {
             projectRoomID: socketID,
         });
     });
+    peer = new Peer(document
+        .querySelector("#userID")
+        .innerText.toString()
+        .trim())
     peer.on("open", () => {
         const myVideo = document.createElement('video')
         myVideo.muted = true
@@ -176,7 +180,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
                 })
             })
 
-            socket.on('userJoinned', data => {
+            socket.on('userJoinned', data => { // If a new user connect
                 connectToNewUser(data.id, stream)
             })
         })
@@ -187,7 +191,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
         projectRoomID = data.projectRoomID;
         isHost = data.isHost;
         restrictSharing = data.restrictSharing;
-        peer = new Peer(data.userID)
+
         if (!isHost) {
             document.querySelector("#chatbot").classList.remove("d-none")
             document.querySelector("#chatbot").classList.add("d-flex")

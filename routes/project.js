@@ -280,6 +280,7 @@ router.get("/open", checkAuthenticated, async(req, res) => {
         projectname: projectname,
         projectRoomID: projectRoom.roomID,
         projectPath: projectRoom.projectPath,
+        userID: userId.toString()
     });
 });
 
@@ -304,10 +305,8 @@ io.on("connection", (socket) => {
             projectRoomID: userPRooms.roomID,
             isHost: isHost,
             restrictSharing: restrictSharing,
-            userID: socket.request.user._id.toString(),
         });
-
-        socket.broadcast.to(userPRooms.roomID).emit("userJoinned", {
+        io.to(userPRooms.roomID).emit("userJoinned", {
             userName: socket.request.user.name,
             roomID: userPRooms.roomID,
             id: socket.request.user._id
@@ -502,6 +501,7 @@ router.post("/joinRoom", checkAuthenticated, async(req, res) => {
             files: fileList,
             projectname: projectRoom.projectName.toString(),
             projectRoomID: projectRoom.roomID,
+            userID: req.user._id.toString()
         });
     } else {
         res.redirect("/user/dashboard");
