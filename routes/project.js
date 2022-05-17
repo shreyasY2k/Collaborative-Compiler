@@ -308,7 +308,6 @@ io.on("connection", (socket) => {
         });
         io.to(userPRooms.roomID).emit("userJoinned", {
             userName: socket.request.user.name,
-            roomID: userPRooms.roomID,
             id: socket.request.user._id
         })
     });
