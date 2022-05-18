@@ -181,35 +181,7 @@ router.post("/create", checkAuthenticated, (req, res) => {
         files: [],
     });
     userProjectsFilesRoomsSchema.save();
-
-    //get list of folders inside user folder local
-    const userFolder = path.join(__dirname, "../", userid.toString());
-    const userFolderList = fs.readdirSync(userFolder);
-    var images = [
-        "/img/photos/img1.jpg",
-        "/img/photos/img2.jpg",
-        "/img/photos/img3.jpg",
-        "/img/photos/img4.jpg",
-        "/img/photos/img5.jpg",
-        "/img/photos/img6.jpg",
-        "/img/photos/img7.jpg",
-        "/img/photos/img8.jpg",
-        "/img/photos/img9.jpg",
-        "/img/photos/img10.jpg",
-        "/img/photos/img11.jpg",
-    ];
-    //create an aray of images equal to the number of folders
-    var imageArray = [];
-    for (var i = 0; i < userFolderList.length; i++) {
-        imageArray.push(images[Math.floor(Math.random() * images.length)]);
-    }
-    res.render("users/dashboard", {
-        name: req.user.name,
-        image: imageArray,
-        files: userFolderList,
-        name: req.user.name,
-        error: "",
-    });
+    res.send({ success: true });
 });
 
 router.get("/delete", checkAuthenticated, async(req, res) => {
