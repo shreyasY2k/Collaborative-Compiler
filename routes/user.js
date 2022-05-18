@@ -74,7 +74,7 @@ router.get("/dashboard", checkAuthenticated, (req, res) => {
             image: imageArray,
             files: userFolderList,
             name: req.user.name,
-            error: ''
+            error: req.flash("error")[0]
         });
     } else {
         fs.mkdirSync(path.join(__dirname, "../", userId.toString()), {

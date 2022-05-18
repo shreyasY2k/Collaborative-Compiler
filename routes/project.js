@@ -464,8 +464,8 @@ io.on("connection", (socket) => {
     });
 });
 
-router.post("/joinRoom", checkAuthenticated, async(req, res) => {
-    var roomId = req.body.roomID;
+router.get("/joinRoom", checkAuthenticated, async(req, res) => {
+    var roomId = req.query.roomID;
     //check if room id exists in database
     if (await activeCollabRooms.findOne({ collabRoomID: roomId })) {
         const projectRoom = await findProjectRoomById(roomId);
@@ -478,7 +478,8 @@ router.post("/joinRoom", checkAuthenticated, async(req, res) => {
             userID: req.user._id.toString()
         });
     } else {
-        res.redirect("/user/dashboard");
+        // req.flash("error", "Room does not exist");
+        res.status(404).send("Room does not exist");
     }
 });
 

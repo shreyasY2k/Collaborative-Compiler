@@ -16,12 +16,6 @@
     <link href="/css/dashboardStyle.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        @media (max-width: 360px) and (max-width: 740px) {
-            #joincollab {
-                display: none;
-            }
-        }
-        
         #smjoin {
             float: right;
             margin-right: 24px;
@@ -37,9 +31,9 @@
 <body>
     <div class="wrapper">
         <!-- <% if (error) { %>
-            <p class="alert alert-danger">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <%= error %>
-            </p>
+            </div>
             <% } %> -->
 
         <div class="main">
@@ -51,7 +45,7 @@
                     <ul class="navbar-nav navbar-align">
 
                         <li class="nav-item dropdown">
-                            <a class="btn btn-outline-warning d-none d-sm-inline-block" type="button" data-bs-toggle="modal" data-bs-target="#joinRoom">Join collaboration</a>
+                            <a class="btn btn-outline-warning d-none d-sm-inline-block" id="joinCollab" type="button" data-bs-toggle="modal" data-bs-target="#joinRoom">Join collaboration</a>
                             <a class="nav-icon dropdown-toggle d-inline-block d-sm-none" href="#" data-bs-toggle="dropdown">
                                 <img src="/img/avatars/avatar.jpg" width="mx-auto" height="mx-auto" class="avatar img-fluid rounded me-1" alt="<%= name %>" />
                             </a>
@@ -77,10 +71,10 @@
                             </div>
 
                             <!-- Modal body -->
-                            <form action="/user/project/joinRoom" method="post">
+                            <form action="/user/project/joinRoom" method="get">
                                 <div class="modal-body">
                                     <input type="text" class="form-control input-lg" id="roomID" name="roomID" placeholder="Room ID" required>
-                                    <p id="roomError" class="alert alert-danger d-none mt-2">
+                                    <p id="roomError" class="alert alert-danger d-none mt-2 ml-2">
                                     </p>
                                 </div>
 

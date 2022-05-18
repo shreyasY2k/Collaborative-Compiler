@@ -49,3 +49,25 @@ document.querySelector("#createProject").addEventListener("hidden.bs.modal", fun
         document.querySelector("#projectError").classList.add("d-none");
     }
 })
+
+document.querySelector("#joinRoom").addEventListener("submit", function(e) {
+    e.preventDefault();
+    var roomID = document.querySelector("#roomID").value.toString().trim();
+    fetch("/user/project/joinRoom?roomID=" + roomID).then(function(response) {
+        return response;
+    }).then(function(data) {
+        if (data.status === 200) {
+            window.location.href = data.url;
+        } else {
+            document.querySelector("#joinCollab").innerText = "Invalid Room ID"
+            document.querySelector("#joinCollab").classList.add("btn-danger");
+            setTimeout(function() {
+                document.querySelector("#joinCollab").innerText = "Join Collaboration";
+                document.querySelector("#joinCollab").classList.remove("btn-danger");
+            }, 2000);
+
+        }
+    }).catch(function(err) {
+        console.log(err);
+    });
+})
