@@ -35,7 +35,7 @@ document.querySelector("#createProject").addEventListener("submit", function(e) 
 function projectExists(projectName) {
     var projects = document.querySelectorAll("#projectTitle")
     for (var i = 0; i < projects.length; i++) {
-        if (projects[i].innerText.toString().trim() == projectName) {
+        if (projects[i].innerText.toString().trim() === projectName) {
             return true
         }
     }
