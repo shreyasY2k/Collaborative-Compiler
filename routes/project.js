@@ -478,7 +478,6 @@ router.get("/joinRoom", checkAuthenticated, async(req, res) => {
             userID: req.user._id.toString()
         });
     } else {
-        // req.flash("error", "Room does not exist");
         res.status(404).send("Room does not exist");
     }
 });
