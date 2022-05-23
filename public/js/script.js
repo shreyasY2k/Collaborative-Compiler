@@ -12,6 +12,7 @@ var remoteSelectionManager;
 var targetContentManager
 var restrictSharing = false;
 var localStream;
+var color = "#" + Math.floor(Math.random() * 16777215).toString(16);
 const videoGrid = document.getElementById('video-grid')
 
 
@@ -294,7 +295,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
     });
     socket.on('cursorPositionChanged', (data) => {
             remoteUserCursor ? remoteUserCursor.dispose() : null;
-            remoteUserCursor = remoteCursorManager.addCursor(data.id, "orange", data.userName);
+            remoteUserCursor = remoteCursorManager.addCursor(data.id, color, data.userName);
             remoteUserCursor.setOffset(data.offset);
 
         })

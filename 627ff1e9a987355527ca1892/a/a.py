@@ -4,8 +4,11 @@ jjdshreyas
 jjeiasas
 I'm shreyas
 hello sjdifji
+hello
+hi mnabn
 jjs  
 assaad
+hii
 def binary_search(arr, item):
 	first = 0
 	last = len(arr) - 1
@@ -20,6 +23,7 @@ def binary_search(arr, item):
 	return False
 hello shroer
 aaw
+jsjdfif
 hi shreyas
 	while(first <= last):
 		mid = (first + last) // 2
