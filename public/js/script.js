@@ -8,6 +8,8 @@ var editor;
 var fileName;
 var remoteCursorManager;
 var remoteUserCursor;
+var remoteSelectionManager;
+var targetContentManager
 var restrictSharing = false;
 var localStream;
 const videoGrid = document.getElementById('video-grid')
@@ -234,34 +236,34 @@ window.addEventListener("DOMContentLoaded", (event) => {
         deleteFileFromList(fileName);
     });
     socket.on("restrictEdit", (data) => {
-        restrictSharing = data.restrictSharing;
-        restrictSharing && !isHost && editor != undefined ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
-    })
-    socket.on("cursorPositionChanged", (data) => {
-        remoteUserCursor ? remoteUserCursor.dispose() : null;
-        require(["vs/editor/editor.main", "MonacoCollabExt"], function(
-            m,
-            MonacoCollabExt
-        ) {
-            remoteCursorManager = new MonacoCollabExt.RemoteCursorManager({
-                editor: editor,
-                tooltips: true,
-                tooltipDuration: 2,
-            });
-            remoteUserCursor = remoteCursorManager.addCursor(
-                data.id,
-                "orange",
-                data.userName
-            );
-            // console.log(remoteUserCursor);
-            // remoteUserCursor = remoteCursorManager.addCursor(sourceUser.id, sourceUser.color, sourceUser.label);
-            remoteUserCursor.setPosition({
-                lineNumber: data.position.lineNumber,
-                column: data.position.column,
-            });
-            remoteUserCursor.show();
-        });
-    });
+            restrictSharing = data.restrictSharing;
+            restrictSharing && !isHost && editor != undefined ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
+        })
+        // socket.on("cursorPositionChanged", (data) => {
+        //     remoteUserCursor ? remoteUserCursor.dispose() : null;
+        //     require(["vs/editor/editor.main", "MonacoCollabExt"], function(
+        //         m,
+        //         MonacoCollabExt
+        //     ) {
+        // remoteCursorManager = new MonacoCollabExt.RemoteCursorManager({
+        //     editor: editor,
+        //     tooltips: true,
+        //     tooltipDuration: 2,
+        // });
+        //         remoteUserCursor = remoteCursorManager.addCursor(
+        //             data.id,
+        //             "orange",
+        //             data.userName
+        //         );
+        //         // console.log(remoteUserCursor);
+        //         // remoteUserCursor = remoteCursorManager.addCursor(sourceUser.id, sourceUser.color, sourceUser.label);
+        //         remoteUserCursor.setPosition({
+        //             lineNumber: data.position.lineNumber,
+        //             column: data.position.column,
+        //         });
+        //         remoteUserCursor.show();
+        //     });
+        // });
     const sidebarToggle = document.body.querySelector("#sidebarToggle");
     if (sidebarToggle) {
         sidebarToggle.addEventListener("click", (event) => {
@@ -290,6 +292,26 @@ window.addEventListener("DOMContentLoaded", (event) => {
     document.querySelector("#compile").addEventListener("click", (e) => {
         compileIt();
     });
+    socket.on('cursorPositionChanged', (data) => {
+        remoteUserCursor = remoteCursorManager.addCursor(data.id, "orange", data.userName);
+        remoteUserCursor.setOffset(data.offset);
+
+    })
+    socket.on('cursorSelectionChanged', (data) => {
+        remoteSelectionManager.addSelection(data.id, "orange", data.userName);
+        remoteSelectionManager.setSelectionOffsets(data.id, data.startOffset, data.endOffset);
+    })
+
+    socket.on("insertText", (data) => {
+        targetContentManager.insert(data.index, data.text);
+    })
+    socket.on("deleteText", (data) => {
+        targetContentManager.delete(data.index, data.length);
+    })
+    socket.on("replaceText", (data) => {
+        targetContentManager.replace(data.index, data.length, data.text);
+    })
+
     socket.on("fileContent", function(data) {
 
         var fileContent = data.fileContent;
@@ -340,44 +362,144 @@ window.addEventListener("DOMContentLoaded", (event) => {
             bracketPairColorization: true,
         });
         restrictSharing && !isHost && editor != undefined ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
-            //when cursor position changes, send the cursor position to the server
-        editor.onDidChangeCursorPosition(function(event) {
-            if (!isHost && restrictSharing) return
-                // console.log(event);
-                // remoteUserCursor ? remoteUserCursor.dispose() : null;
-            socket.emit("cursorPositionChange", {
-                fileRoomID: fileRoomID,
+        require(["vs/editor/editor.main", "MonacoCollabExt"], function(
+            m,
+            MonacoCollabExt
+        ) {
+            remoteCursorManager = new MonacoCollabExt.RemoteCursorManager({
+                editor: editor,
+                tooltips: true,
+                tooltipDuration: 2,
+            });
+            remoteSelectionManager = new MonacoCollabExt.RemoteSelectionManager({
+                editor: editor
+            });
+            targetContentManager = new MonacoCollabExt.EditorContentManager({
+                editor: editor,
+                onInsert(index, text) {
+                    socket.emit("insertText", {
+                        index: index,
+                        text: text,
+                        fileRoomID: fileRoomID,
+                        projectPath: projectPath,
+                        fileName: fileName
+                    });
+                },
+                onReplace(index, length, text) {
+                    socket.emit("replaceText", {
+                        index: index,
+                        length: length,
+                        text: text,
+                        fileRoomID: fileRoomID,
+                        projectPath: projectPath,
+                        fileName: fileName
+                    });
+                },
+                onDelete(index, length) {
+                    socket.emit("deleteText", {
+                        index: index,
+                        length: length,
+                        fileRoomID: fileRoomID,
+                        projectPath: projectPath,
+                        fileName: fileName
+                    });
+                }
+            });
+            // const contentManager = new MonacoCollabExt.ContentManager({
+            //     editor: editor,
+            //     onInsert(index, text) {
+            //         socket.emit("insertText", {
+            //             index: index,
+            //             text: text,
+            //             fileRoomID: fileRoomID,
+            //             projectPath: projectPath,
+            //             fileName: fileName
+            //         });
+            //     },
+            //     onReplace(index, length, text) {
+            //         socket.emit("replaceText", {
+            //             index: index,
+            //             length: length,
+            //             text: text,
+            //             fileRoomID: fileRoomID,
+            //             projectPath: projectPath,
+            //             fileName: fileName
+            //         });
+            //     },
+            //     onDelete(index, length) {
+            //         socket.emit("deleteText", {
+            //             index: index,
+            //             length: length,
+            //             fileRoomID: fileRoomID,
+            //             projectPath: projectPath,
+            //             fileName: fileName
+            //         });
+            //     }
+            // });
+
+        })
+        editor.onDidChangeCursorPosition((e) => {
+            const offset = editor.getModel().getOffsetAt(e.position);
+            socket.emit("cursorPositionChanged", {
+                id: userID,
                 userName: userName,
-                position: event.position,
-            });
-        });
-        editor.onKeyUp(function(e) {
-            if (!isHost && restrictSharing) return
+                offset: offset,
+                fileRoomID: fileRoomID
+            })
+        })
 
-            const text = editor.getValue();
-            socket.send({
-                text: text,
-                fileName: fileName,
+        editor.onDidChangeCursorSelection((e) => {
+            const startOffset = editor.getModel().getOffsetAt(e.selection.getStartPosition());
+            const endOffset = editor.getModel().getOffsetAt(e.selection.getEndPosition());
+            socket.emit("cursorSelectionChanged", {
+                startOffset: startOffset,
+                endOffset: endOffset,
                 fileRoomID: fileRoomID,
-            });
-        });
+                id: userID,
+                userName: userName
+            })
+        })
 
-        editor.onDidChangeModelContent((event) => {
-            if (!isHost && restrictSharing) return
+        //when cursor position changes, send the cursor position to the server
+        // editor.onDidChangeCursorPosition(function(event) {
+        //     if (!isHost && restrictSharing) return
+        //         // console.log(event);
+        //         // remoteUserCursor ? remoteUserCursor.dispose() : null;
+        //     socket.emit("cursorPositionChange", {
+        //         fileRoomID: fileRoomID,
+        //         userName: userName,
+        //         position: event.position,
+        //     });
+        // });
+        // editor.onKeyUp(function(e) {
+        //     if (!isHost && restrictSharing) return
 
-            sendFileContent();
-            //if line starts with // and ends with .
-            var lineNumber = editor.getPosition().lineNumber;
-            var lineContent = editor.getModel().getLineContent(lineNumber);
-            if (lineContent.startsWith("//") && lineContent.endsWith(".")) {
-                lineContent = lineContent.substring(2, lineContent.length - 1);
-                socket.emit("autoSuggest", {
-                    fileRoomID: fileRoomID,
-                    lineNumber: lineNumber,
-                    lineContent: lineContent,
-                });
-            }
-        });
+        //     const text = editor.getValue();
+        //     socket.send({
+        //         text: text,
+        //         fileName: fileName,
+        //         fileRoomID: fileRoomID,
+        //     });
+        // });
+
+
+
+        // editor.onDidChangeModelContent((event) => {
+        //     if (!isHost && restrictSharing) return
+
+        //     sendFileContent();
+        //     //if line starts with // and ends with .
+        //     var lineNumber = editor.getPosition().lineNumber;
+        //     var lineContent = editor.getModel().getLineContent(lineNumber);
+        //     if (lineContent.startsWith("//") && lineContent.endsWith(".")) {
+        //         lineContent = lineContent.substring(2, lineContent.length - 1);
+        //         socket.emit("autoSuggest", {
+        //             fileRoomID: fileRoomID,
+        //             lineNumber: lineNumber,
+        //             lineContent: lineContent,
+        //         });
+        //     }
+        // });
     });
     socket.on("text", function(data) {
         //get current cursor position

@@ -391,14 +391,14 @@ io.on("connection", (socket) => {
             .to(data.fileRoomID)
             .emit("text", { text: data.text, fileName: data.fileName });
     });
-    socket.on("cursorPositionChange", async(data) => {
-        var newData = {
-            userName: data.userName,
-            position: data.position,
-            id: socket.request.user._id.toString(),
-        };
-        socket.broadcast.to(data.fileRoomID).emit("cursorPositionChanged", newData);
-    });
+    // socket.on("cursorPositionChange", async(data) => {
+    //     var newData = {
+    //         userName: data.userName,
+    //         position: data.position,
+    //         id: socket.request.user._id.toString(),
+    //     };
+    //     socket.broadcast.to(data.fileRoomID).emit("cursorPositionChanged", newData);
+    // });
     socket.on("updateFile", (data) => {
         fs.writeFileSync(
             path.join(data.projectPath, data.fileName),
@@ -435,7 +435,42 @@ io.on("connection", (socket) => {
             isHost: data.isHost,
         });
     });
-
+    socket.on("cursorPositionChanged", (data) => {
+        socket.broadcast.to(data.fileRoomID).emit("cursorPositionChanged", {
+            id: data.id,
+            userName: data.userName,
+            offset: data.offset
+        });
+    })
+    socket.on("cursorSelectionChanged", (data) => {
+        socket.broadcast.to(data.fileRoomID).emit("cursorSelectionChanged", {
+            id: data.id,
+            startOffset: data.startOffset,
+            endOffset: data.endOffset,
+            userName: data.userName,
+        });
+    })
+    socket.on("insertText", (data) => {
+        socket.broadcast.to(data.fileRoomID).emit("insertText", {
+            index: data.index,
+            text: data.text,
+            userName: data.userName,
+        });
+    })
+    socket.on("deleteText", (data) => {
+        socket.broadcast.to(data.fileRoomID).emit("deleteText", {
+            index: data.index,
+            text: data.text,
+            length: data.length,
+        })
+    })
+    socket.on("replaceText", (data) => {
+        socket.broadcast.to(data.fileRoomID).emit("replaceText", {
+            index: data.index,
+            text: data.text,
+            length: data.length,
+        })
+    })
     socket.on("compile", async(file) => {
         var fileRoomID = file.fileRoomID;
         await fetch("https://codeorbored.herokuapp.com", {
