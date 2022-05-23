@@ -293,22 +293,37 @@ window.addEventListener("DOMContentLoaded", (event) => {
         compileIt();
     });
     socket.on('cursorPositionChanged', (data) => {
-        remoteUserCursor = remoteCursorManager.addCursor(data.id, "orange", data.userName);
-        remoteUserCursor.setOffset(data.offset);
+            remoteUserCursor ? remoteUserCursor.dispose() : null;
+            remoteUserCursor = remoteCursorManager.addCursor(data.id, "orange", data.userName);
+            remoteUserCursor.setOffset(data.offset);
 
-    })
-    socket.on('cursorSelectionChanged', (data) => {
-        remoteSelectionManager.addSelection(data.id, "orange", data.userName);
-        remoteSelectionManager.setSelectionOffsets(data.id, data.startOffset, data.endOffset);
-    })
+        })
+        // socket.on('cursorSelectionChanged', (data) => {
+        //     // remoteUserCursor ? remoteUserCursor.dispose() : null;
+        //     // remoteSelectionManager ? remoteSelectionManager.removeSelection(data.id) : null;
+        //     //if selection was made by the current user, then remove the selection
+        //     if (data.id == userID) {
+        //         remoteSelectionManager ? remoteSelectionManager.removeSelection(data.id) : null;
+        //     } else {
+        //         remoteSelectionManager.addSelection(data.id, "orange", data.userName);
+        //         remoteSelectionManager.setSelectionOffsets(data.id, data.startOffset, data.endOffset);
+        //     }
+        //     //if unselected, then remove the selection
+        //     if (data.startOffset == -1 && data.endOffset == -1) {
+        //         remoteSelectionManager ? remoteSelectionManager.removeSelection(data.id) : null;
+        //     }
+        // })
 
     socket.on("insertText", (data) => {
+        // remoteUserCursor ? remoteUserCursor.dispose() : null;
         targetContentManager.insert(data.index, data.text);
     })
     socket.on("deleteText", (data) => {
+        // remoteUserCursor ? remoteUserCursor.dispose() : null;
         targetContentManager.delete(data.index, data.length);
     })
     socket.on("replaceText", (data) => {
+        // remoteUserCursor ? remoteUserCursor.dispose() : null;
         targetContentManager.replace(data.index, data.length, data.text);
     })
 
@@ -484,22 +499,22 @@ window.addEventListener("DOMContentLoaded", (event) => {
 
 
 
-        // editor.onDidChangeModelContent((event) => {
-        //     if (!isHost && restrictSharing) return
+        editor.onDidChangeModelContent((event) => {
+            if (!isHost && restrictSharing) return
 
-        //     sendFileContent();
-        //     //if line starts with // and ends with .
-        //     var lineNumber = editor.getPosition().lineNumber;
-        //     var lineContent = editor.getModel().getLineContent(lineNumber);
-        //     if (lineContent.startsWith("//") && lineContent.endsWith(".")) {
-        //         lineContent = lineContent.substring(2, lineContent.length - 1);
-        //         socket.emit("autoSuggest", {
-        //             fileRoomID: fileRoomID,
-        //             lineNumber: lineNumber,
-        //             lineContent: lineContent,
-        //         });
-        //     }
-        // });
+            sendFileContent();
+            //if line starts with // and ends with .
+            var lineNumber = editor.getPosition().lineNumber;
+            var lineContent = editor.getModel().getLineContent(lineNumber);
+            if (lineContent.startsWith("//") && lineContent.endsWith(".")) {
+                lineContent = lineContent.substring(2, lineContent.length - 1);
+                socket.emit("autoSuggest", {
+                    fileRoomID: fileRoomID,
+                    lineNumber: lineNumber,
+                    lineContent: lineContent,
+                });
+            }
+        });
     });
     socket.on("text", function(data) {
         //get current cursor position
