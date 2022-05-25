@@ -146,6 +146,11 @@ function deleteFileFromList(fileName) {
     for (var i = 0; i < listGroupItems.length; i++) {
         if (listGroupItems[i].innerText.toString().trim() === fileName) {
             listGroup.removeChild(listGroupItems[i]);
+            if (listGroupItems[i].classList.contains("active")) {
+                //remove the editor if the file is deleted
+                removeEditor();
+                hideCompiler();
+            }
             break;
         }
     }
@@ -180,6 +185,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
             socket.on('userJoinned', data => { // If a new user connect
                 connectToNewUser(data.id, stream)
             })
+
         })
     })
     socket.on("roomDetails", function(data) {
@@ -714,11 +720,16 @@ function leaveRoom() {
     });
 }
 
+function hideCompiler() {
+    document.getElementById("compiler").classList.add("d-none");
+}
+
 function removeEditor() {
     if (editor) {
         document.querySelector("#editor").innerHTML = "";
         document.querySelector("#editor").remove();
         editor.getModel().dispose();
+        editor = null;
     }
 }
 
