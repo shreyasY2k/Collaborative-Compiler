@@ -462,6 +462,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
         })
         editor.onDidChangeCursorPosition((e) => {
             const offset = editor.getModel().getOffsetAt(e.position);
+            remoteUserCursor ? remoteUserCursor.dispose() : null;
             socket.emit("cursorPositionChanged", {
                 id: userID,
                 userName: userName,
@@ -470,17 +471,17 @@ window.addEventListener("DOMContentLoaded", (event) => {
             })
         })
 
-        editor.onDidChangeCursorSelection((e) => {
-            const startOffset = editor.getModel().getOffsetAt(e.selection.getStartPosition());
-            const endOffset = editor.getModel().getOffsetAt(e.selection.getEndPosition());
-            socket.emit("cursorSelectionChanged", {
-                startOffset: startOffset,
-                endOffset: endOffset,
-                fileRoomID: fileRoomID,
-                id: userID,
-                userName: userName
-            })
-        })
+        // editor.onDidChangeCursorSelection((e) => {
+        //     const startOffset = editor.getModel().getOffsetAt(e.selection.getStartPosition());
+        //     const endOffset = editor.getModel().getOffsetAt(e.selection.getEndPosition());
+        //     socket.emit("cursorSelectionChanged", {
+        //         startOffset: startOffset,
+        //         endOffset: endOffset,
+        //         fileRoomID: fileRoomID,
+        //         id: userID,
+        //         userName: userName
+        //     })
+        // })
 
         //when cursor position changes, send the cursor position to the server
         // editor.onDidChangeCursorPosition(function(event) {

@@ -64,7 +64,7 @@ document.querySelector("#joinRoom").addEventListener("submit", function(e) {
             setTimeout(function() {
                 document.querySelector("#joinCollab").innerText = "Join Collaboration";
                 document.querySelector("#joinCollab").classList.remove("btn-danger");
-            }, 2000);
+            }.bind(this), 3000);
 
         }
     }).catch(function(err) {
