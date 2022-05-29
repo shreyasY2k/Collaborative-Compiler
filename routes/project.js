@@ -501,7 +501,6 @@ io.on("connection", (socket) => {
 
 router.get("/joinRoom", checkAuthenticated, async(req, res) => {
     var roomId = req.query.roomID;
-    console.log(req.query);
     //check if room id exists in database
     if (await activeCollabRooms.findOne({ collabRoomID: roomId })) {
         const projectRoom = await findProjectRoomById(roomId);

@@ -302,7 +302,10 @@ window.addEventListener("DOMContentLoaded", (event) => {
     socket.on('cursorPositionChanged', (data) => {
             remoteUserCursor ? remoteUserCursor.dispose() : null;
             remoteUserCursor = remoteCursorManager.addCursor(data.id, color, data.userName);
-            remoteUserCursor.setOffset(data.offset);
+            remoteUserCursor.setPosition({
+                lineNumber: data.offset.lineNumber,
+                column: data.offset.column
+            });
 
         })
         // socket.on('cursorSelectionChanged', (data) => {
@@ -461,12 +464,11 @@ window.addEventListener("DOMContentLoaded", (event) => {
 
         })
         editor.onDidChangeCursorPosition((e) => {
-            const offset = editor.getModel().getOffsetAt(e.position);
             remoteUserCursor ? remoteUserCursor.dispose() : null;
             socket.emit("cursorPositionChanged", {
                 id: userID,
                 userName: userName,
-                offset: offset,
+                offset: e.position,
                 fileRoomID: fileRoomID
             })
         })
