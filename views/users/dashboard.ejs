@@ -71,7 +71,7 @@
                             </div>
 
                             <!-- Modal body -->
-                            <form action="/user/project/joinRoom" method="get">
+                            <form action="/user/project/joinRoom" method="post">
                                 <div class="modal-body">
                                     <input type="text" class="form-control input-lg" id="roomID" name="roomID" placeholder="Room ID" required>
                                     <p id="roomError" class="alert alert-danger d-none mt-2 ml-2">
@@ -80,8 +80,8 @@
 
                                 <!-- Modal footer -->
                                 <div class="modal-footer">
-                                    <button type="submit" class="btn btn-success" data-bs-dismiss="modal">OK</button>
-                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-success">OK</button>
+                                    <button type="reset" id="reset" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
                                 </div>
                             </form>
 

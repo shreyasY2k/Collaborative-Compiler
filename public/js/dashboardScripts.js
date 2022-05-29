@@ -50,22 +50,27 @@ document.querySelector("#createProject").addEventListener("hidden.bs.modal", fun
     }
 })
 
+document.querySelector("#joinRoom").addEventListener("hidden.bs.modal", function(e) {
+    document.querySelector("#roomID").value = "";
+    if (document.querySelector("#roomError").classList.contains("d-block")) {
+        document.querySelector("#roomError").classList.remove("d-block");
+        document.querySelector("#roomError").classList.add("d-none");
+    }
+})
+
 document.querySelector("#joinRoom").addEventListener("submit", function(e) {
     e.preventDefault();
     var roomID = document.querySelector("#roomID").value.toString().trim();
+    console.log(roomID);
     fetch("/user/project/joinRoom?roomID=" + roomID).then(function(response) {
         return response;
     }).then(function(data) {
         if (data.status === 200) {
             window.location.href = data.url;
         } else {
-            document.querySelector("#joinCollab").innerText = "Invalid Room ID"
-            document.querySelector("#joinCollab").classList.add("btn-danger");
-            setTimeout(function() {
-                document.querySelector("#joinCollab").innerText = "Join Collaboration";
-                document.querySelector("#joinCollab").classList.remove("btn-danger");
-            }.bind(this), 3000);
-
+            document.querySelector("#roomError").classList.remove("d-none");
+            document.querySelector("#roomError").classList.add("d-block");
+            document.querySelector("#roomError").innerText = "Room does not exist";
         }
     }).catch(function(err) {
         console.log(err);
