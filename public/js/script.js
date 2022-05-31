@@ -12,6 +12,7 @@ var remoteSelectionManager;
 var targetContentManager
 var restrictSharing = false;
 var localStream;
+var last_applied_change = null;
 var color = "#" + Math.floor(Math.random() * 16777215).toString(16);
 const videoGrid = document.getElementById('video-grid')
 
@@ -243,34 +244,9 @@ window.addEventListener("DOMContentLoaded", (event) => {
         deleteFileFromList(fileName);
     });
     socket.on("restrictEdit", (data) => {
-            restrictSharing = data.restrictSharing;
-            restrictSharing && !isHost && editor != undefined ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
-        })
-        // socket.on("cursorPositionChanged", (data) => {
-        //     remoteUserCursor ? remoteUserCursor.dispose() : null;
-        //     require(["vs/editor/editor.main", "MonacoCollabExt"], function(
-        //         m,
-        //         MonacoCollabExt
-        //     ) {
-        // remoteCursorManager = new MonacoCollabExt.RemoteCursorManager({
-        //     editor: editor,
-        //     tooltips: true,
-        //     tooltipDuration: 2,
-        // });
-        //         remoteUserCursor = remoteCursorManager.addCursor(
-        //             data.id,
-        //             "orange",
-        //             data.userName
-        //         );
-        //         // console.log(remoteUserCursor);
-        //         // remoteUserCursor = remoteCursorManager.addCursor(sourceUser.id, sourceUser.color, sourceUser.label);
-        //         remoteUserCursor.setPosition({
-        //             lineNumber: data.position.lineNumber,
-        //             column: data.position.column,
-        //         });
-        //         remoteUserCursor.show();
-        //     });
-        // });
+        restrictSharing = data.restrictSharing;
+        restrictSharing && !isHost && editor != undefined ? editor.setReadOnly(true) : editor.setReadOnly(false);
+    })
     const sidebarToggle = document.body.querySelector("#sidebarToggle");
     if (sidebarToggle) {
         sidebarToggle.addEventListener("click", (event) => {
@@ -299,42 +275,11 @@ window.addEventListener("DOMContentLoaded", (event) => {
     document.querySelector("#compile").addEventListener("click", (e) => {
         compileIt();
     });
-    socket.on('cursorPositionChanged', (data) => {
-            remoteUserCursor ? remoteUserCursor.dispose() : null;
-            remoteUserCursor = remoteCursorManager.addCursor(data.id, color, data.userName);
-            remoteUserCursor.setPosition({
-                lineNumber: data.offset.lineNumber,
-                column: data.offset.column
-            });
 
-        })
-        // socket.on('cursorSelectionChanged', (data) => {
-        //     // remoteUserCursor ? remoteUserCursor.dispose() : null;
-        //     // remoteSelectionManager ? remoteSelectionManager.removeSelection(data.id) : null;
-        //     //if selection was made by the current user, then remove the selection
-        //     if (data.id == userID) {
-        //         remoteSelectionManager ? remoteSelectionManager.removeSelection(data.id) : null;
-        //     } else {
-        //         remoteSelectionManager.addSelection(data.id, "orange", data.userName);
-        //         remoteSelectionManager.setSelectionOffsets(data.id, data.startOffset, data.endOffset);
-        //     }
-        //     //if unselected, then remove the selection
-        //     if (data.startOffset == -1 && data.endOffset == -1) {
-        //         remoteSelectionManager ? remoteSelectionManager.removeSelection(data.id) : null;
-        //     }
-        // })
-
-    socket.on("insertText", (data) => {
-        // remoteUserCursor ? remoteUserCursor.dispose() : null;
-        targetContentManager.insert(data.index, data.text);
-    })
-    socket.on("deleteText", (data) => {
-        // remoteUserCursor ? remoteUserCursor.dispose() : null;
-        targetContentManager.delete(data.index, data.length);
-    })
-    socket.on("replaceText", (data) => {
-        // remoteUserCursor ? remoteUserCursor.dispose() : null;
-        targetContentManager.replace(data.index, data.length, data.text);
+    socket.on("editorContentChanged", (data) => {
+        var delta = data.delta;
+        last_applied_change = delta;
+        editor.session.getDocument().applyDeltas([delta]);
     })
 
     socket.on("fileContent", function(data) {
@@ -356,175 +301,62 @@ window.addEventListener("DOMContentLoaded", (event) => {
             }
         }
         removeEditor();
-        //create a monaco model
-        var model = monaco.editor.createModel(
-            fileContent,
-            undefined,
-            monaco.Uri.file(fileName)
-        );
-        //create an editor for the model
-        //create an element p as the first child of #editor
-        var editorElement = document.createElement("p");
+        var editorElement = document.createElement("div");
         editorElement.id = "editor";
         editorElement.style.height = "580px";
         editorElement.style.width = "700px";
+        editorElement.style.margin = "auto";
+        editorElement.style.marginBottom = "10px";
         var editorDiv = document.querySelector("#editordiv");
         editorElement.classList.add("col-lg-9");
         editorDiv.prepend(editorElement);
         document.querySelector("#compiler").classList.remove("d-none");
         document.querySelector("#compiler").classList.add("d-inline");
-        editor = monaco.editor.create(document.querySelector("#editor"), {
-            model: model,
-            theme: "vs-dark",
-            autoClosingBrackets: true,
-            fontSize: 14,
-            fontFamily: "Consolas, 'Courier New', monospace",
-            lightbulb: {
-                enabled: true,
-            },
+        var modelist = ace.require("ace/ext/modelist");
+        editor = ace.edit("editor", {
+            mode: modelist.getModeForPath(fileName).mode,
+            theme: "ace/theme/tomorrow_night",
+            autoCloseBrackets: true,
             matchBrackets: true,
-            autoClosingQuotes: "always",
-            bracketPairColorization: true,
+            autoClosingQuotes: true,
+            tabSize: 4,
+            useSoftTabs: true,
+            showGutter: true,
+            showPrintMargin: false,
+            fontSize: 14,
+            wrap: true,
+            readOnly: false,
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            enableSnippets: true,
+            // autoScrollEditorIntoView: true,
+            highlightActiveLine: true,
+            // highlightGutterLine: true,
+            showLineNumbers: true,
+            showFoldWidgets: true,
+            useWorker: false,
+            value: fileContent
         });
-        restrictSharing && !isHost && editor != undefined ? editor.updateOptions({ readOnly: true }) : editor.updateOptions({ readOnly: false })
-        require(["vs/editor/editor.main", "MonacoCollabExt"], function(
-            m,
-            MonacoCollabExt
-        ) {
-            remoteCursorManager = new MonacoCollabExt.RemoteCursorManager({
-                editor: editor,
-                tooltips: true,
-                tooltipDuration: 2,
-            });
-            remoteSelectionManager = new MonacoCollabExt.RemoteSelectionManager({
-                editor: editor
-            });
-            targetContentManager = new MonacoCollabExt.EditorContentManager({
-                editor: editor,
-                onInsert(index, text) {
-                    socket.emit("insertText", {
-                        index: index,
-                        text: text,
-                        fileRoomID: fileRoomID,
-                        projectPath: projectPath,
-                        fileName: fileName
-                    });
-                },
-                onReplace(index, length, text) {
-                    socket.emit("replaceText", {
-                        index: index,
-                        length: length,
-                        text: text,
-                        fileRoomID: fileRoomID,
-                        projectPath: projectPath,
-                        fileName: fileName
-                    });
-                },
-                onDelete(index, length) {
-                    socket.emit("deleteText", {
-                        index: index,
-                        length: length,
-                        fileRoomID: fileRoomID,
-                        projectPath: projectPath,
-                        fileName: fileName
-                    });
-                }
-            });
-            // const contentManager = new MonacoCollabExt.ContentManager({
-            //     editor: editor,
-            //     onInsert(index, text) {
-            //         socket.emit("insertText", {
-            //             index: index,
-            //             text: text,
-            //             fileRoomID: fileRoomID,
-            //             projectPath: projectPath,
-            //             fileName: fileName
-            //         });
-            //     },
-            //     onReplace(index, length, text) {
-            //         socket.emit("replaceText", {
-            //             index: index,
-            //             length: length,
-            //             text: text,
-            //             fileRoomID: fileRoomID,
-            //             projectPath: projectPath,
-            //             fileName: fileName
-            //         });
-            //     },
-            //     onDelete(index, length) {
-            //         socket.emit("deleteText", {
-            //             index: index,
-            //             length: length,
-            //             fileRoomID: fileRoomID,
-            //             projectPath: projectPath,
-            //             fileName: fileName
-            //         });
-            //     }
-            // });
+        restrictSharing && !isHost && editor != undefined ? editor.setReadOnly(true) : editor.setReadOnly(false);
 
-        })
-        editor.onDidChangeCursorPosition((e) => {
-            remoteUserCursor ? remoteUserCursor.dispose() : null;
-            socket.emit("cursorPositionChanged", {
-                id: userID,
-                userName: userName,
-                offset: e.position,
-                fileRoomID: fileRoomID
-            })
-        })
-
-        // editor.onDidChangeCursorSelection((e) => {
-        //     const startOffset = editor.getModel().getOffsetAt(e.selection.getStartPosition());
-        //     const endOffset = editor.getModel().getOffsetAt(e.selection.getEndPosition());
-        //     socket.emit("cursorSelectionChanged", {
-        //         startOffset: startOffset,
-        //         endOffset: endOffset,
-        //         fileRoomID: fileRoomID,
-        //         id: userID,
-        //         userName: userName
-        //     })
-        // })
-
-        //when cursor position changes, send the cursor position to the server
-        // editor.onDidChangeCursorPosition(function(event) {
-        //     if (!isHost && restrictSharing) return
-        //         // console.log(event);
-        //         // remoteUserCursor ? remoteUserCursor.dispose() : null;
-        //     socket.emit("cursorPositionChange", {
-        //         fileRoomID: fileRoomID,
-        //         userName: userName,
-        //         position: event.position,
-        //     });
-        // });
-        // editor.onKeyUp(function(e) {
-        //     if (!isHost && restrictSharing) return
-
-        //     const text = editor.getValue();
-        //     socket.send({
-        //         text: text,
-        //         fileName: fileName,
-        //         fileRoomID: fileRoomID,
-        //     });
-        // });
-
-
-
-        editor.onDidChangeModelContent((event) => {
+        editor.on("change", (e) => {
             if (!isHost && restrictSharing) return
-
             sendFileContent();
-            //if line starts with // and ends with .
-            var lineNumber = editor.getPosition().lineNumber;
-            var lineContent = editor.getModel().getLineContent(lineNumber);
+            var lineContent = editor.session.getLine(e.end.row);
             if (lineContent.startsWith("//") && lineContent.endsWith(".")) {
-                lineContent = lineContent.substring(2, lineContent.length - 1);
                 socket.emit("autoSuggest", {
                     fileRoomID: fileRoomID,
-                    lineNumber: lineNumber,
+                    lineNumber: e.end.row + 1,
                     lineContent: lineContent,
                 });
             }
-        });
+            if (last_applied_change != e) {
+                socket.emit("editorContentChanged", {
+                    fileRoomID: fileRoomID,
+                    delta: e
+                });
+            }
+        }, false)
     });
     socket.on("text", function(data) {
         //get current cursor position
@@ -533,31 +365,17 @@ window.addEventListener("DOMContentLoaded", (event) => {
         editor.setPosition(position);
     });
     socket.on("autoSuggest", function(data) {
+        console.log(data);
         if (data.data.answers.length == 0) {
-            //get entire editor content and replace the line with the new line an set value
-            var editorContent = editor.getModel().getValue();
-            var lineNumber = data.lineNumber;
-            var lineContent = editor.getModel().getLineContent(lineNumber);
-            var newLineContent = "No suggestions found";
-            var newEditorContent = editorContent.replace(lineContent, newLineContent);
-            editor.getModel().setValue(newEditorContent);
-            var cursorPosition = new monaco.Position(
-                lineNumber,
-                newLineContent.length
-            );
-            editor.setPosition(cursorPosition);
+            editor.getSession().insert({
+                row: data.lineNumber,
+                column: 0
+            }, "No suggestions found");
         } else {
-            var editorContent = editor.getModel().getValue();
-            var lineNumber = data.lineNumber;
-            var lineContent = editor.getModel().getLineContent(lineNumber);
-            var newLineContent = data.data.answers[0].answer;
-            var newEditorContent = editorContent.replace(lineContent, newLineContent);
-            editor.getModel().setValue(newEditorContent);
-            var cursorPosition = new monaco.Position(
-                lineNumber,
-                newLineContent.length
-            );
-            editor.setPosition(cursorPosition);
+            editor.getSession().insert({
+                row: data.lineNumber,
+                column: 0
+            }, "\n" + data.data.answers[0].answer);
         }
     });
     socket.on("compileOutput", function(data) {
@@ -731,27 +549,19 @@ function removeEditor() {
     if (editor) {
         document.querySelector("#editor").innerHTML = "";
         document.querySelector("#editor").remove();
-        editor.getModel().dispose();
+        //remove ace editor
+        editor.destroy();
         editor = null;
     }
 }
 
 //on every key press in editor, send the content to the server with the file name and project name
 function sendFileContent() {
-    //select the name of active file
-    // var listGroupItems = document.querySelectorAll(".list-group-item");
-    // for (var i = 0; i < listGroupItems.length; i++) {
-    //     if (listGroupItems[i].classList.contains("active")) {
-    //         fileName = listGroupItems[i].innerText.toString().trim();
-    //     }
-    // }
-
-    var editor = monaco.editor.getModels()[0];
     var projectName = document
         .querySelector("#projectName")
         .innerText.toString()
         .trim();
-    var fileContent = editor.getValue();
+    var fileContent = editor.getSession().getValue();
     socket.emit("updateFile", {
         projectPath: projectPath,
         fileRoomID: fileRoomID,
@@ -762,7 +572,6 @@ function sendFileContent() {
 }
 
 function compileIt() {
-    var editor = monaco.editor.getModels()[0];
     socket.emit("compile", {
         fileRoomID: fileRoomID,
         body: JSON.stringify({

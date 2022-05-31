@@ -385,20 +385,6 @@ io.on("connection", (socket) => {
 
         });
     });
-    socket.on("changeFileSharing", async(data) => {});
-    socket.on("message", async(data) => {
-        socket.broadcast
-            .to(data.fileRoomID)
-            .emit("text", { text: data.text, fileName: data.fileName });
-    });
-    // socket.on("cursorPositionChange", async(data) => {
-    //     var newData = {
-    //         userName: data.userName,
-    //         position: data.position,
-    //         id: socket.request.user._id.toString(),
-    //     };
-    //     socket.broadcast.to(data.fileRoomID).emit("cursorPositionChanged", newData);
-    // });
     socket.on("updateFile", (data) => {
         fs.writeFileSync(
             path.join(data.projectPath, data.fileName),
@@ -450,26 +436,8 @@ io.on("connection", (socket) => {
             userName: data.userName,
         });
     })
-    socket.on("insertText", (data) => {
-        socket.broadcast.to(data.fileRoomID).emit("insertText", {
-            index: data.index,
-            text: data.text,
-            userName: data.userName,
-        });
-    })
-    socket.on("deleteText", (data) => {
-        socket.broadcast.to(data.fileRoomID).emit("deleteText", {
-            index: data.index,
-            text: data.text,
-            length: data.length,
-        })
-    })
-    socket.on("replaceText", (data) => {
-        socket.broadcast.to(data.fileRoomID).emit("replaceText", {
-            index: data.index,
-            text: data.text,
-            length: data.length,
-        })
+    socket.on("editorContentChanged", (data) => {
+        socket.broadcast.to(data.fileRoomID).emit("insertText", data);
     })
     socket.on("compile", async(file) => {
         var fileRoomID = file.fileRoomID;
