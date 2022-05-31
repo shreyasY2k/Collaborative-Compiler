@@ -351,7 +351,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
                 });
             }
             if (last_applied_change != e) {
-                socket.emit("editorContentChanged", {
+                socket.emit("onEditorContentChange", {
                     fileRoomID: fileRoomID,
                     delta: e
                 });

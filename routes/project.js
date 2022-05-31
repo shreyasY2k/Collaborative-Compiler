@@ -436,8 +436,8 @@ io.on("connection", (socket) => {
             userName: data.userName,
         });
     })
-    socket.on("editorContentChanged", (data) => {
-        socket.broadcast.to(data.fileRoomID).emit("insertText", data);
+    socket.on("onEditorContentChange", (data) => {
+        socket.broadcast.to(data.fileRoomID).emit("editorContentChanged", data);
     })
     socket.on("compile", async(file) => {
         var fileRoomID = file.fileRoomID;
