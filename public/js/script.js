@@ -324,7 +324,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
         var modelist = ace.require("ace/ext/modelist");
         editor = ace.edit("editor", {
             mode: modelist.getModeForPath(fileName).mode,
-            theme: "ace/theme/tomorrow_night",
+            theme: "ace/theme/chaos",
             autoCloseBrackets: true,
             matchBrackets: true,
             autoClosingQuotes: true,
@@ -338,7 +338,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
             enableBasicAutocompletion: true,
             enableLiveAutocompletion: true,
             enableSnippets: true,
-            // autoScrollEditorIntoView: true,
+            autoScrollEditorIntoView: true,
             highlightActiveLine: true,
             // highlightGutterLine: true,
             showLineNumbers: true,

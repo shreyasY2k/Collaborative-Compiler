@@ -58,7 +58,7 @@
                 <div class="container-fluid">
                     <div id="tutorial" class="d-flex justify-content-center" style="align-items: baseline;">
                         <a id="sidebarToggle"><i class="fa fa-lg fa-code"></i></a>
-                        <a style="margin-left: 10px;" id="tutorial" class="btn btn-outline-info">Tutorial</a>
+                        <a style="margin-left: 10px;" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#tutorialModal">Tutorial</a>
                         <!--<button style="margin-left: 10px;" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>
                    
                         --></div>
@@ -128,6 +128,73 @@
               <path d="M2,21L23,12L2,3V10L17,12L2,14V21Z" />
             </svg>
           </button>
+        </div>
+    </div>
+    <div class="modal" id="tutorialModal">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background: #272424F8; color: #ffffff;">
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <!-- Carousel -->
+                    <div id="carouselExampleControlsNoTouching" class="carousel slide" data-bs-touch="false" data-bs-interval="false">
+                        <div class="carousel-inner">
+                            <div class="carousel-item active">
+                                <h3>File Operations</h3>
+                                <img src="assets/video/file ceration.gif" class="d-block w-100" alt="...">
+                                <p>&#8226; Use the <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="none" stroke="white" stroke-linecap="round" stroke-width="2" d="M12 20v-8m0 0V4m0 8h8m-8 0H4"/></svg>                                    icon to create a new files. <br> &#8226; You can also Delete and Rename files.
+                                </p>
+
+                            </div>
+                            <div class="carousel-item">
+                                <h3>Editor and Compiler</h3>
+                                <img src="assets/video/edit.gif" class="d-block w-100" alt="...">
+                                <p>&#8226; Click on the file name to open the editor and start coding.<br> &#8226; Execute your code using the "Run" button. You can also provide inputs.</p>
+                            </div>
+                            <div class="carousel-item">
+                                <h3>A.I Pair Programmer</h3>
+                                <img src="assets/video/ai.gif" class="d-block w-100" alt="...">
+                                <p>&#8226; To activate A.I start a line with a "//" and end it with a '.' <br> &#8226; You will get suggestions on the next line.
+                                </p>
+                            </div>
+                            <div class="carousel-item">
+                                <h3>Start Collaboration</h3>
+                                <img src="assets/video/start collaboration.gif" class="d-block w-100" alt="...">
+                                <p>Use the Start Collaboration button to generate a session ID and share it with your mates!
+                                </p>
+                            </div>
+                            <div class="carousel-item">
+                                <h3>Restrict Editing</h3>
+                                <img src="assets/video/restrict editing.gif" class="d-block w-100" alt="...">
+                                <p>&#8226; Host can restrict other users on the session from editing. <br> &#8226; Use the toggle on the top to do this.</p>
+                            </div>
+                            <div class="carousel-item">
+                                <h3>Stop Collaboration</h3>
+                                <img src="assets/video/stop collaboration.gif" class="d-block w-100" alt="...">
+                                <p>Click on Stop Collaboration to stop the session and remove all participants.</p>
+                            </div>
+
+
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControlsNoTouching" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControlsNoTouching" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+                    </div>
+
+                    <!-- Modal footer -->
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+
+
+
+                    </div>
+
+                </div>
+            </div>
         </div>
     </div>
 </body>
