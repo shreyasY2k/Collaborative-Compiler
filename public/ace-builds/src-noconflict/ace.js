@@ -7409,7 +7409,6 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
             return this.clonePos(end);
         };
         this.remove = function(range) {
-            console.log("remove", range);
             var start = this.clippedPos(range.start.row, range.start.column);
             var end = this.clippedPos(range.end.row, range.end.column);
             this.applyDelta({

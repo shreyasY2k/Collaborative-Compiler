@@ -413,7 +413,9 @@ io.on("connection", (socket) => {
                 });
             });
     });
-
+    socket.on("cursorPositionChanged", (data) => {
+        socket.broadcast.to(data.fileRoomID).emit("cursorPositionChanged", data);
+    })
     socket.on("chat", (data) => {
         socket.broadcast.to(data.projectRoomID).emit("chat", {
             userName: data.userName,

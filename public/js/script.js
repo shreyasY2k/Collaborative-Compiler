@@ -281,6 +281,15 @@ window.addEventListener("DOMContentLoaded", (event) => {
         last_applied_change = delta;
         editor.session.getDocument().applyDeltas([delta]);
     })
+    socket.on("cursorPositionChanged", (data) => {
+        console.log(remoteCursorManager._cursors[data.id]);
+        remoteUserCursor ? remoteCursorManager.clearCursor(data.id) : null;
+        if (typeof(remoteCursorManager._cursors[data.id]) === "undefined") {
+            remoteUserCursor = remoteCursorManager.addCursor(data.id, data.userName, data.color, { row: data.row, column: data.column });
+        } else {
+            remoteCursorManager.setCursor(data.id.toString(), { row: data.row, column: data.column });
+        }
+    })
 
     socket.on("fileContent", function(data) {
 
@@ -338,8 +347,20 @@ window.addEventListener("DOMContentLoaded", (event) => {
             value: fileContent
         });
         restrictSharing && !isHost && editor != undefined ? editor.setReadOnly(true) : editor.setReadOnly(false);
+        remoteCursorManager = new AceCollabExt.AceMultiCursorManager(editor.getSession());
+        editor.session.selection.on("changeCursor", function(e) {
+            socket.emit("cursorPositionChanged", {
+                id: userID,
+                userName: userName,
+                fileRoomID: fileRoomID,
+                color: color,
+                row: editor.selection.getCursor().row,
+                column: editor.selection.getCursor().column,
+            })
 
+        })
         editor.on("change", (e) => {
+            // console.log(e);
             if (!isHost && restrictSharing) return
             sendFileContent();
             var lineContent = editor.session.getLine(e.end.row);
