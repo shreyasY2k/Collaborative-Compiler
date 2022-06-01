@@ -407,7 +407,7 @@ io.on("connection", (socket) => {
             )
             .then((res) => res.json())
             .then((data) => {
-                io.to(fileRoomID).emit("autoSuggest", {
+                socket.emit("autoSuggest", {
                     data: data,
                     lineNumber: file.lineNumber,
                 });

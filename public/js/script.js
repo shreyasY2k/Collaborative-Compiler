@@ -343,7 +343,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
             if (!isHost && restrictSharing) return
             sendFileContent();
             var lineContent = editor.session.getLine(e.end.row);
-            if (lineContent.startsWith("//") && lineContent.endsWith(".")) {
+            if (lineContent.startsWith("//") && lineContent.endsWith(".") && last_applied_change != e) {
                 socket.emit("autoSuggest", {
                     fileRoomID: fileRoomID,
                     lineNumber: e.end.row + 1,
@@ -365,7 +365,6 @@ window.addEventListener("DOMContentLoaded", (event) => {
         editor.setPosition(position);
     });
     socket.on("autoSuggest", function(data) {
-        console.log(data);
         if (data.data.answers.length == 0) {
             editor.getSession().insert({
                 row: data.lineNumber,
