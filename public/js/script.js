@@ -359,7 +359,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
             })
 
         })
-        editor.on("change", (e) => {
+        editor.session.on("change", (e) => {
             // console.log(e);
             if (!isHost && restrictSharing) return
             sendFileContent();
