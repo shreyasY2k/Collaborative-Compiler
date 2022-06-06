@@ -59,12 +59,21 @@
                     <div id="tutorial" class="d-flex justify-content-center" style="align-items: baseline;">
                         <a id="sidebarToggle"><i class="fa fa-lg fa-code"></i></a>
                         <a style="margin-left: 10px;" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#tutorialModal">Tutorial</a>
-                        <!--<button style="margin-left: 10px;" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>
-                   
-                        --></div>
+                        <% if(isHost) { %>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-info dropdown-toggle" style="margin-left: 10px; display: none;" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" data-bs-target="#dropdownMenu" aria-haspopup="true" aria-expanded="false">
+                                <i class="fa fa-lg fa-cog"></i>
+                            </button>
+                                <div class="dropdown-menu" id="dropdownMenu" aria-labelledby="dropdownMenuButton">
+                                </div>
+                            </div>
+                            <% } %>
 
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+
+                                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+                    </div>
                     <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
                         <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
                             <% if(isHost) { %>
                                 <li id="back" class="nav-item px-lg-1 py-1 py-lg-0"><a onclick="leaveRoom()" class="btn btn-outline-danger" href="/user/dashboard">Back</a></li>

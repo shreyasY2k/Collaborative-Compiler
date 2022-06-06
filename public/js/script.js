@@ -184,6 +184,15 @@ window.addEventListener("DOMContentLoaded", (event) => {
             })
 
             socket.on('userJoinned', data => { // If a new user connect
+                //create a dropdown menu if the user is host to add new users joinned to the project
+                if (isHost) {
+                    var dropdownMenu = document.querySelector("#dropdownMenu");
+                    var dropdownMenuItem = document.createElement("a");
+                    dropdownMenuItem.classList.add("dropdown-item");
+                    dropdownMenuItem.innerText = data.userName;
+                    dropdownMenuItem.id = data.id;
+                    dropdownMenu.appendChild(dropdownMenuItem);
+                }
                 connectToNewUser(data.id, stream)
             })
 
@@ -323,11 +332,9 @@ window.addEventListener("DOMContentLoaded", (event) => {
         document.querySelector("#compiler").classList.add("d-inline");
         var modelist = ace.require("ace/ext/modelist");
         editor = ace.edit("editor", {
-            mode: modelist.getModeForPath(fileName).mode,
             theme: "ace/theme/chaos",
-            autoCloseBrackets: true,
+            mode: modelist.getModeForPath(fileName).mode,
             matchBrackets: true,
-            autoClosingQuotes: true,
             tabSize: 4,
             useSoftTabs: true,
             showGutter: true,
@@ -340,7 +347,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
             enableSnippets: true,
             autoScrollEditorIntoView: true,
             highlightActiveLine: true,
-            // highlightGutterLine: true,
+            highlightGutterLine: true,
             showLineNumbers: true,
             showFoldWidgets: true,
             useWorker: false,
@@ -628,6 +635,7 @@ function manageCollaboration() {
 
 function initializeCollabStyles() {
     var navBar = document.querySelector("#tutorial")
+    document.querySelector("#dropdownMenuButton").style.display = "block";
     navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
     document.querySelector("#chatbot").classList.remove("d-none")
     document.querySelector("#chatbot").classList.add("d-flex")
@@ -639,7 +647,7 @@ function initializeCollabStyles() {
     li.innerHTML = `
     <span>
     Restrict Editing</span>
-    <input onclick="restrictEdit()" class="form-check-input" type="checkbox" role="switch" id="restrictEdit">
+    <input onclick="restrictEdit()" class="form-check-input" style="margin-left:auto;" type="checkbox" role="switch" id="restrictEdit">
     `;
     ul.insertBefore(li, ul.firstChild);
     document.querySelector("#manageCollaboration").innerText =
@@ -720,6 +728,8 @@ function stopCollaboration() {
 
 function cleanupCollabStyles() {
     document.querySelector("#mic").remove();
+    document.querySelector("#dropdownMenuButton").style.display = "none";
+    document.querySelector("#dropdownMenu").innerHTML = document.querySelector("#dropdownMenu").firstElementChild.outerHTML;;
     document.querySelector("#chatbot").classList.remove("d-flex")
     document.querySelector("#chatbot").classList.add("d-none")
     var ul = document.querySelector(".navbar-nav");
