@@ -187,13 +187,16 @@ router.post("/create", checkAuthenticated, (req, res) => {
 router.get("/delete", checkAuthenticated, async(req, res) => {
     const userid = req.user._id;
     const projectname = req.query.projectname.toString();
-    fs.rmSync(
-        path.join(__dirname, "../", userid.toString() + "/" + projectname), { recursive: true }
-    );
     // await deleteProject(
     //   process.env.AWS_S3_BUCKET_NAME,
     //   userid.toString() + "/" + projectname
     // );
+
+    fs.rmdirSync(
+        path.join(__dirname, "../", userid.toString(), projectname), { recursive: true }
+    );
+
+
     await userProjectsFilesRooms.deleteOne({
         userId: userid.toString(),
         projectname: projectname,
@@ -219,17 +222,17 @@ router.get("/download", checkAuthenticated, (req, res) => {
                 "../",
                 userid.toString(),
                 projectname.toString() + ".zip"
-            )
-        );
-        //delete the zip file after download
-        fs.unlinkSync(
-            path.join(
-                __dirname,
-                "../",
-                userid.toString(),
-                projectname.toString() + ".zip"
-            )
-        );
+            ), () => {
+                fs.unlinkSync(
+                    path.join(
+                        __dirname,
+                        "../",
+                        userid.toString(),
+                        projectname.toString() + ".zip"
+                    )
+                );
+            });
+
     });
 });
 
