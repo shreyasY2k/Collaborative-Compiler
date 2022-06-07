@@ -183,20 +183,22 @@ window.addEventListener("DOMContentLoaded", (event) => {
                 })
             })
 
-            socket.on('userJoinned', data => { // If a new user connect
-                //create a dropdown menu if the user is host to add new users joinned to the project
-                if (isHost) {
-                    var dropdownMenu = document.querySelector("#dropdownMenu");
-                    var dropdownMenuItem = document.createElement("a");
-                    dropdownMenuItem.classList.add("dropdown-item");
-                    dropdownMenuItem.innerText = data.userName;
-                    dropdownMenuItem.id = data.id;
-                    dropdownMenu.appendChild(dropdownMenuItem);
-                }
+            socket.on('userJoinned', data => {
                 connectToNewUser(data.id, stream)
             })
 
         })
+    })
+
+    socket.on("newUser", function(data) {
+        if (isHost) {
+            var dropdownMenu = document.querySelector("#dropdownMenu");
+            var dropdownMenuItem = document.createElement("a");
+            dropdownMenuItem.classList.add("dropdown-item");
+            dropdownMenuItem.innerText = data.userName;
+            dropdownMenuItem.id = data.id;
+            dropdownMenu.appendChild(dropdownMenuItem);
+        }
     })
     socket.on("roomDetails", function(data) {
         userName = data.userName;
@@ -212,12 +214,6 @@ window.addEventListener("DOMContentLoaded", (event) => {
             navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
         }
     });
-    socket.on("newUser", function(data) {
-        console.log(data.userName + " joined the room");
-        const call = peer.call(data.roomID, stream);
-
-    })
-
     socket.on("addFile", (fileName) => {
         var listGroup = document.querySelector(".list-group");
         var span = document.createElement("span");

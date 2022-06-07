@@ -285,6 +285,10 @@ io.on("connection", (socket) => {
             userName: socket.request.user.name,
             id: socket.request.user._id
         })
+        io.to(userPRooms.roomID).emit("newUser", {
+            userName: socket.request.user.name,
+            id: socket.request.user._id
+        })
     });
     socket.on("restrictEdit", async(data) => {
         var collabID = await activeCollabRooms.findOne({
