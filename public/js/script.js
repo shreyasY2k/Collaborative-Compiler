@@ -412,6 +412,14 @@ window.addEventListener("DOMContentLoaded", (event) => {
     socket.on("chat", function(data) {
         addResponseMsg(data.message, data.userName, data.isHost);
     });
+    socket.on("disconnect", function(data) {
+        cleanupCollabStyles();
+        if (isHost) {
+            socket.emit("stopCollaboration", {
+                projectRoomID: projectRoomID
+            })
+        }
+    })
     socket.on("stopCollaboration", function() {
         if (!isHost) {
             if (confirm("Host has stopped collaboration")) {
@@ -729,7 +737,7 @@ function stopCollaboration() {
 function cleanupCollabStyles() {
     document.querySelector("#mic").remove();
     document.querySelector("#dropdownMenuButton").style.display = "none";
-    document.querySelector("#dropdownMenu").innerHTML = document.querySelector("#dropdownMenu").firstElementChild.outerHTML;;
+    document.querySelector("#dropdownMenu").innerHTML = document.querySelector("#dropdownMenu").firstElementChild ? document.querySelector("#dropdownMenu").firstElementChild.outerHTML : '';
     document.querySelector("#chatbot").classList.remove("d-flex")
     document.querySelector("#chatbot").classList.add("d-none")
     var ul = document.querySelector(".navbar-nav");
