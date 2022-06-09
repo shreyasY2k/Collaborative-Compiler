@@ -197,6 +197,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
             dropdownMenuItem.classList.add("dropdown-item");
             dropdownMenuItem.innerText = data.userName;
             dropdownMenuItem.id = data.id;
+            dropdownMenuItem.setAttribute("onclick", "removeUser(this.id)");
             dropdownMenu.appendChild(dropdownMenuItem);
         }
     })
@@ -287,7 +288,6 @@ window.addEventListener("DOMContentLoaded", (event) => {
         editor.session.getDocument().applyDeltas([delta]);
     })
     socket.on("cursorPositionChanged", (data) => {
-        console.log(remoteCursorManager._cursors[data.id]);
         remoteUserCursor ? remoteCursorManager.clearCursor(data.id) : null;
         if (typeof(remoteCursorManager._cursors[data.id]) === "undefined") {
             remoteUserCursor = remoteCursorManager.addCursor(data.id, data.userName, data.color, { row: data.row, column: data.column });
@@ -420,10 +420,21 @@ window.addEventListener("DOMContentLoaded", (event) => {
         if (!isHost) {
             if (confirm("Host has stopped collaboration")) {
                 window.location.href = "/user/dashboard";
+                peer.destroy();
+                socket.disconnect();
             } else {
                 window.location.href = "/user/dashboard";
-
+                peer.destroy();
+                socket.disconnect();
             }
+        }
+    })
+    socket.on("removeUser", function(data) {
+        if (data.userID == userID) {
+            alert("You have been removed from collaboration");
+            window.location.href = "/user/dashboard";
+            peer.destroy();
+            socket.disconnect();
         }
     })
 });
@@ -790,5 +801,11 @@ function muteUnmute() {
             track.enabled = true;
         });
     }
+}
 
+function removeUser(userID) {
+    socket.emit("removeUser", {
+        projectRoomID: projectRoomID,
+        userID: userID
+    })
 }

@@ -302,6 +302,13 @@ io.on("connection", (socket) => {
             restrictSharing: data.restrictSharing,
         });
     });
+
+    socket.on("removeUser", async(data) => {
+        socket.broadcast.to(data.projectRoomID).emit("removeUser", {
+            userID: data.userID,
+        });
+    })
+
     socket.on("leaveRoom", async(data) => {
         socket.leave(data.projectRoomID);
     });
@@ -516,5 +523,62 @@ router.post("/stopCollaboration", checkAuthenticated, async(req, res) => {
     });
     res.send({ status: "success" });
 });
+var s = require('s3-node-client');
+
+var client = s.createClient({
+    maxAsyncS3: 20, // this is the default
+    s3RetryCount: 3, // this is the default
+    s3RetryDelay: 1000, // this is the default
+    multipartUploadThreshold: 20971520, // this is the default (20 MB)
+    multipartUploadSize: 15728640, // this is the default (15 MB)
+    s3Options: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        region: "ap-south-1"
+    },
+});
+
+
+router.post("/admin/uploadFolders", async(req, res) => {
+    var password = req.body.password.toString();
+    if (password === process.env.SECRET.toString()) {
+        //get all directories 
+        var directories = fs.readdirSync(path.join(__dirname, "../"));
+        for (var i = 0; i < directories.length; i++) {
+            //if is directory
+            if (fs.lstatSync(path.join(__dirname, "../", directories[i])).isDirectory()) {
+                if (directories[i] === "node_modules" || directories[i] === "public" || directories[i] === "views" || directories[i] == "routes" || directories[i] === "models" || directories[i] === ".git") {
+                    continue;
+                }
+                var params = {
+                    localDir: directories[i],
+                    deleteRemoved: true,
+                    s3Params: {
+                        Bucket: "sahapaathi",
+                        Prefix: directories[i],
+                    },
+                };
+                var uploader = client.uploadDir(params);
+                uploader.on('error', function(err) {
+                    console.error("unable to sync:", err.stack);
+                });
+                uploader.on('progress', function() {
+                    console.log("progress", uploader.progressAmount, uploader.progressTotal);
+                });
+                uploader.on('end', function() {
+                    console.log("done uploading");
+
+                });
+            }
+        }
+        res.send("success");
+    } else {
+        res.redirect("/")
+    }
+
+})
+
+
+
 
 module.exports = router;

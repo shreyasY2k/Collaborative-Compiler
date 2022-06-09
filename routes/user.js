@@ -161,37 +161,6 @@ router.get("/dashboard", checkAuthenticated, (req, res) => {
 });
 
 router.post("/logout", (req, res) => {
-    //upload user folder to s3 sync
-    // const userId = req.user._id;
-    // const userFolder = path.join(__dirname, "../", userId.toString());
-    // const userFolderList = fs.readdirSync(userFolder);
-    // userFolderList.forEach(function (folder) {
-    //   const folderPath = path.join(__dirname, "../", userId.toString(), folder);
-    //   const folderList = fs.readdirSync(folderPath);
-    //   folderList.forEach(function (file) {
-    //     const filePath = path.join(
-    //       __dirname,
-    //       "../",
-    //       userId.toString(),
-    //       folder,
-    //       file
-    //     );
-    //     const fileStream = fs.createReadStream(filePath);
-    //     const fileName = filePath.split("/")[3];
-    //     const params = {
-    //       Bucket: process.env.AWS_S3_BUCKET_NAME,
-    //       Key: userId.toString() + "/" + folder + "/" + fileName,
-    //       Body: fileStream
-    //     };
-    //     s3.upload(params, function (err, data) {
-    //       if (err) {
-    //         console.log(err, err.stack); // an error occurred
-    //       } else {
-    //         console.log(data); // successful response
-    //       }
-    //     });
-    //   });
-    // });
     req.logOut();
     res.redirect("/");
 });

@@ -30,11 +30,13 @@
         "passport": "^0.5.2",
         "passport-local": "^1.0.0",
         "path": "^0.12.7",
+        "s3-node-client": "^4.4.4",
         "socket.io": "^4.4.1",
         "zip-lib": "^0.7.3"
     },
     "devDependencies": {
         "dotenv": "^16.0.0",
-        "nodemon": "^2.0.15"
+        "nodemon": "^2.0.15",
+        "s3-folder-upload": "^2.3.5"
     }
 }
