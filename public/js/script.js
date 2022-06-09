@@ -363,7 +363,6 @@ window.addEventListener("DOMContentLoaded", (event) => {
 
         })
         editor.session.on("change", (e) => {
-            // console.log(e);
             if (!isHost && restrictSharing) return
             sendFileContent();
             var lineContent = editor.session.getLine(e.end.row);
@@ -408,11 +407,23 @@ window.addEventListener("DOMContentLoaded", (event) => {
     socket.on("chat", function(data) {
         addResponseMsg(data.message, data.userName, data.isHost);
     });
-    socket.on("disconnect", function(data) {
+    socket.on("leaveRoom", function(data) {
+        if (isHost)
+            removeUserFromList(data.userID)
+        if (remoteCursorManager ? remoteCursorManager._cursors[data.userID] : false) {
+            remoteCursorManager.clearCursor(data.userID);
+        }
+    })
+    socket.on("disconnect", function() {
         cleanupCollabStyles();
         if (isHost) {
             socket.emit("stopCollaboration", {
                 projectRoomID: projectRoomID
+            })
+        } else {
+            socket.emit("leaveRoom", {
+                projectRoomID: projectRoomID,
+                userID: userID
             })
         }
     })
@@ -580,6 +591,7 @@ function getFile(element) {
 function leaveRoom() {
     socket.emit("leaveRoom", {
         projectRoomID: projectRoomID,
+        userID: userID,
     });
 }
 
@@ -804,8 +816,23 @@ function muteUnmute() {
 }
 
 function removeUser(userID) {
+    var users = document.querySelector("#dropdownMenu").children;
+    for (var i = 0; i < users.length; i++) {
+        if (users[i].id == userID) {
+            users[i].remove();
+        }
+    }
     socket.emit("removeUser", {
         projectRoomID: projectRoomID,
         userID: userID
     })
+}
+
+function removeUserFromList(userID) {
+    var users = document.querySelector("#dropdownMenu").children;
+    for (var i = 0; i < users.length; i++) {
+        if (users[i].id == userID) {
+            users[i].remove();
+        }
+    }
 }

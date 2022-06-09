@@ -309,9 +309,9 @@ io.on("connection", (socket) => {
         });
     })
 
-    socket.on("leaveRoom", async(data) => {
-        socket.leave(data.projectRoomID);
-    });
+    // socket.on("leaveRoom", async(data) => {
+    //     socket.leave(data.projectRoomID);
+    // });
     //listen for addFile event
     socket.on("addFile", async(data) => {
         if (!fs.existsSync(path.join(data.projectPath, data.fileName))) {
@@ -478,6 +478,10 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
 
     });
+    socket.on("leaveRoom", async(data) => {
+        socket.leave(data.projectRoomID);
+        socket.broadcast.to(data.projectRoomID).emit("leaveRoom", data);
+    })
     socket.on("disconnectusers", (data) => {
         socket.broadcast.to(data.projectRoomID).emit("stopCollaboration");
     });
