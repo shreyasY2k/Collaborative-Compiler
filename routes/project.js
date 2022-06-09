@@ -286,6 +286,7 @@ io.on("connection", (socket) => {
             id: socket.request.user._id
         })
         io.to(userPRooms.roomID).emit("newUser", {
+            isHost: isHost,
             userName: socket.request.user.name,
             id: socket.request.user._id
         })
