@@ -817,6 +817,9 @@ function muteUnmute() {
 
 function removeUser(userID) {
     var users = document.querySelector("#dropdownMenu").children;
+    if (remoteCursorManager ? remoteCursorManager._cursors[userID] : false) {
+        remoteCursorManager.clearCursor(userID);
+    }
     for (var i = 0; i < users.length; i++) {
         if (users[i].id == userID) {
             users[i].remove();
