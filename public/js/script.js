@@ -763,7 +763,7 @@ function cleanupCollabStyles() {
     ul.firstElementChild.remove();
     document.querySelector("#manageCollaboration").innerText =
         "Start Collaboration";
-    document.querySelector("#back").style.display = "block";
+    document.querySelector("#back") ? document.querySelector("#back").style.display = "block" : null;
     document
         .querySelector("#manageCollaboration")
         .setAttribute("onclick", "manageCollaboration()");

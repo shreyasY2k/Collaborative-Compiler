@@ -60,7 +60,7 @@ router.get("/register", checkNotAuthenticated, (req, res) => {
 router.get("/dashboard", checkAuthenticated, (req, res) => {
     const userId = req.user._id;
     //if user folder exists
-    if (fs.existsSync(path.join(__dirname, "../../", userId.toString()))) {
+    if (fs.existsSync(path.join(__dirname, "../", userId.toString()))) {
         //get list of folders inside user folder local
         const userFolder = path.join(__dirname, "../", userId.toString());
         const userFolderList = fs.readdirSync(userFolder);
@@ -93,7 +93,6 @@ router.get("/dashboard", checkAuthenticated, (req, res) => {
                     var folders = data.CommonPrefixes.map(function(item) {
                         return item.Prefix.split("/")[1];
                     });
-                    // console.log(folders);
                     //for each folder create a folder locally inside user folder and add their files to it
                     folders.forEach(function(folder) {
                         fs.mkdirSync(path.join(__dirname, "../", userId.toString(), folder), {

@@ -153,7 +153,6 @@ initializePassport(passport);
 
 io.use((socket, next) => {
     if (socket.request.user) {
-        // console.log(socket.request.user);
         next();
     } else {
         next(new Error("unauthorized"));
@@ -438,13 +437,7 @@ io.on("connection", (socket) => {
             isHost: data.isHost,
         });
     });
-    socket.on("cursorPositionChanged", (data) => {
-        socket.broadcast.to(data.fileRoomID).emit("cursorPositionChanged", {
-            id: data.id,
-            userName: data.userName,
-            offset: data.offset
-        });
-    })
+
     socket.on("cursorSelectionChanged", (data) => {
         socket.broadcast.to(data.fileRoomID).emit("cursorSelectionChanged", {
             id: data.id,
