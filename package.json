@@ -23,6 +23,7 @@
         "express-session": "^1.17.2",
         "fs": "0.0.1-security",
         "http": "0.0.1-security",
+        "https": "^1.0.0",
         "jszip": "^3.9.0",
         "method-override": "^3.0.0",
         "mongoose": "^6.2.8",

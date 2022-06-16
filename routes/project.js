@@ -1,6 +1,7 @@
 //Output only to room
 //Socket emit on get file only to requester
 //change emit events to broadcast so that sender doesnot need to wait for response
+const https = require('https');
 
 const fileExtLanguage = {
     "c": "C",
@@ -413,18 +414,26 @@ io.on("connection", (socket) => {
     socket.on("autoSuggest", (file) => {
         var question = file.lineContent;
         var fileRoomID = file.fileRoomID;
+        const agent = new https.Agent({
+            rejectUnauthorized: false
+        });
         //fetch request to codegrepper
         fetch(
                 "https://www.codegrepper.com/api/search.php?q=" +
                 question +
-                "&search_options=search_titles"
+                "&search_options=search_titles", {
+                    method: "GET",
+                    agent
+                }
             )
             .then((res) => res.json())
             .then((data) => {
                 socket.emit("autoSuggest", {
                     data: data,
                     lineNumber: file.lineNumber,
-                });
+                })
+            }).catch((err) => {
+                console.log(err);
             });
     });
     socket.on("cursorPositionChanged", (data) => {
