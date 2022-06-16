@@ -158,6 +158,7 @@ function deleteFileFromList(fileName) {
 }
 
 window.addEventListener("DOMContentLoaded", (event) => {
+    addLoader();
     var socketID = projectRoomID
     socket = io.connect();
     socket.on("connect", function() {
@@ -167,6 +168,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
     });
     peer = new Peer(userID)
     peer.on("open", () => {
+
         const myVideo = document.createElement('video')
         myVideo.muted = true
         navigator.mediaDevices.getUserMedia({
@@ -180,6 +182,8 @@ window.addEventListener("DOMContentLoaded", (event) => {
                 const video = document.createElement('video')
                 call.on('stream', userVideoStream => {
                     addVideoStream(video, userVideoStream)
+                    removeLoader()
+
                 })
             })
 
