@@ -436,7 +436,6 @@ window.addEventListener("DOMContentLoaded", (event) => {
     })
     socket.on("stopCollaboration", function() {
         if (!isHost) {
-            peer.destroy();
             if (confirm("Host has stopped collaboration")) {
                 window.location.href = "/user/dashboard";
 
@@ -734,7 +733,6 @@ function restrictEdit() {
 
 function stopCollaboration() {
     addLoader();
-    // peer.destroy()
     fetch("/user/project/stopCollaboration", {
             method: "POST",
             headers: {
