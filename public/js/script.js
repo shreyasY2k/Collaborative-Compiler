@@ -762,7 +762,7 @@ function cleanupCollabStyles() {
     document.querySelector("#chatbot").classList.remove("d-flex")
     document.querySelector("#chatbot").classList.add("d-none")
     var ul = document.querySelector(".navbar-nav");
-    ul.firstElementChild.remove();
+    ul ? ul.firstElementChild.remove() : null;
     document.querySelector("#manageCollaboration").innerText =
         "Start Collaboration";
     document.querySelector("#back") ? document.querySelector("#back").style.display = "block" : null;
