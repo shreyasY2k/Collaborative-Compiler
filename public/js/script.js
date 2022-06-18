@@ -199,11 +199,12 @@ window.addEventListener("DOMContentLoaded", (event) => {
             var dropdownMenu = document.querySelector("#dropdownMenu");
             var dropdownMenuItem = document.createElement("a");
             dropdownMenuItem.classList.add("dropdown-item");
-            dropdownMenuItem.innerText = data.userName;
             dropdownMenuItem.id = data.id;
-            dropdownMenuItem.setAttribute("onclick", "removeUser(this.id)");
+            dropdownMenuItem.innerHTML += `<a id="${data.id}" onclick="removeUser(this.id)">${data.userName}<i class="fa fa-times" style='margin-left:7px;'></i></a>`;
             if (data.isHost) {
-                dropdownMenuItem.removeAttribute("onclick");
+                dropdownMenuItem.innerHTML = "";
+                dropdownMenuItem.classList.add("disabled");
+                dropdownMenuItem.innerText = data.userName;
             }
             dropdownMenu.appendChild(dropdownMenuItem);
         }
@@ -436,6 +437,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
     })
     socket.on("stopCollaboration", function() {
         if (!isHost) {
+            peer.destroy();
             if (confirm("Host has stopped collaboration")) {
                 window.location.href = "/user/dashboard";
 
