@@ -163,7 +163,7 @@ window.addEventListener("DOMContentLoaded", async(event) => {
     getUserMedia({
         video: false,
         audio: true
-    }, function(stream) {
+    }).then(function(stream) {
         peer = new Peer(userID)
         peer.on("open", async() => {
 
@@ -187,8 +187,11 @@ window.addEventListener("DOMContentLoaded", async(event) => {
 
 
         })
+    }).catch(function(err) {
+        console.log(err);
+        removeLoader()
+
     })
-    removeLoader()
 
     var socketID = projectRoomID
     socket = io.connect();
@@ -225,7 +228,9 @@ window.addEventListener("DOMContentLoaded", async(event) => {
             document.querySelector("#chatbot").classList.remove("d-none")
             document.querySelector("#chatbot").classList.add("d-flex")
             var navBar = document.querySelector("#tutorial")
-            navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
+            if (localStream != undefined) {
+                navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
+            }
         }
     });
     socket.on("addFile", (fileName) => {
@@ -673,7 +678,9 @@ function manageCollaboration() {
 function initializeCollabStyles() {
     var navBar = document.querySelector("#tutorial")
     document.querySelector("#dropdownMenuButton").style.display = "block";
-    navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
+    if (localStream != undefined) {
+        navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
+    }
     document.querySelector("#chatbot").classList.remove("d-none")
     document.querySelector("#chatbot").classList.add("d-flex")
     var ul = document.querySelector(".navbar-nav");
@@ -812,20 +819,22 @@ window.onbeforeunload = function(e) {
 }
 
 function muteUnmute() {
-    if (document.querySelector("#mic").classList.contains("btn-success")) {
-        document.querySelector("#mic").classList.remove("btn-success");
-        document.querySelector("#mic").classList.add("btn-danger");
-        document.querySelector("#mic").innerHTML = `<i class="fa fa-microphone-slash"></i>`;
-        localStream.getAudioTracks().forEach(function(track) {
-            track.enabled = false;
-        });
-    } else {
-        document.querySelector("#mic").classList.remove("btn-danger");
-        document.querySelector("#mic").classList.add("btn-success");
-        document.querySelector("#mic").innerHTML = `<i class="fa fa-microphone"></i>`;
-        localStream.getAudioTracks().forEach(function(track) {
-            track.enabled = true;
-        });
+    if (localStream != undefined) {
+        if (document.querySelector("#mic").classList.contains("btn-success")) {
+            document.querySelector("#mic").classList.remove("btn-success");
+            document.querySelector("#mic").classList.add("btn-danger");
+            document.querySelector("#mic").innerHTML = `<i class="fa fa-microphone-slash"></i>`;
+            localStream.getAudioTracks().forEach(function(track) {
+                track.enabled = false;
+            });
+        } else {
+            document.querySelector("#mic").classList.remove("btn-danger");
+            document.querySelector("#mic").classList.add("btn-success");
+            document.querySelector("#mic").innerHTML = `<i class="fa fa-microphone"></i>`;
+            localStream.getAudioTracks().forEach(function(track) {
+                track.enabled = true;
+            });
+        }
     }
 }
 
