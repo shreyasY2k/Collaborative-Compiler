@@ -170,13 +170,12 @@ window.addEventListener("DOMContentLoaded", async(event) => {
             const myVideo = document.createElement('video')
             myVideo.muted = true
             removeLoader()
-
-            localStream = stream
-            if (!document.querySelector(".fa-microphone")) {
+            if (!document.querySelector(".fa-microphone") && !isHost) {
                 var navBar = document.querySelector("#tutorial")
-
                 navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
             }
+            localStream = stream
+
             addVideoStream(myVideo, stream)
             peer.on('call', call => {
                 call.answer(stream)
