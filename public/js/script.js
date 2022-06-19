@@ -167,31 +167,31 @@ window.addEventListener("DOMContentLoaded", (event) => {
         });
     });
     peer = new Peer(userID)
-    peer.on("open", () => {
+    peer.on("open", async() => {
 
         const myVideo = document.createElement('video')
         myVideo.muted = true
-        navigator.mediaDevices.getUserMedia({
+        let stream = await navigator.mediaDevices.getUserMedia({
             video: false,
             audio: true
-        }).then(stream => {
-            localStream = stream
-            addVideoStream(myVideo, stream)
-            peer.on('call', call => {
-                call.answer(stream)
-                const video = document.createElement('video')
-                call.on('stream', userVideoStream => {
-                    addVideoStream(video, userVideoStream)
-                    removeLoader()
-
-                })
-            })
-
-            socket.on('userJoinned', data => {
-                connectToNewUser(data.id, stream)
-            })
-
         })
+        localStream = stream
+        addVideoStream(myVideo, stream)
+        peer.on('call', call => {
+            call.answer(stream)
+            const video = document.createElement('video')
+            call.on('stream', userVideoStream => {
+                addVideoStream(video, userVideoStream)
+                removeLoader()
+
+            })
+        })
+
+        socket.on('userJoinned', data => {
+            connectToNewUser(data.id, stream)
+        })
+
+
     })
 
     socket.on("newUser", function(data) {
@@ -760,7 +760,7 @@ function stopCollaboration() {
 function cleanupCollabStyles() {
     document.querySelector("#mic") ? document.querySelector("#mic").remove() : null;
     document.querySelector("#dropdownMenuButton") ? document.querySelector("#dropdownMenuButton").style.display = "none" : null
-    document.querySelector("#dropdownMenu").innerHTML = document.querySelector("#dropdownMenu").firstElementChild ? document.querySelector("#dropdownMenu").firstElementChild.outerHTML : '';
+    document.querySelector("#dropdownMenu").innerHTML = document.querySelector("#dropdownMenu") ? document.querySelector("#dropdownMenu").firstElementChild ? document.querySelector("#dropdownMenu").firstElementChild.outerHTML : '' : '';
     document.querySelector("#chatbot").classList.remove("d-flex")
     document.querySelector("#chatbot").classList.add("d-none")
     var ul = document.querySelector(".navbar-nav");
