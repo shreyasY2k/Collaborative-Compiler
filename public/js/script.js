@@ -452,7 +452,9 @@ window.addEventListener("DOMContentLoaded", async(event) => {
     })
     socket.on("stopCollaboration", function() {
         if (!isHost) {
-            peer.destroy();
+            if (localStream != undefined) {
+                peer.destroy();
+            }
             if (confirm("Host has stopped collaboration")) {
                 window.location.href = "/user/dashboard";
 
@@ -463,7 +465,9 @@ window.addEventListener("DOMContentLoaded", async(event) => {
     })
     socket.on("removeUser", function(data) {
         if (data.userID == userID) {
-            peer.destroy();
+            if (localStream != undefined) {
+                peer.destroy();
+            }
             alert("You have been removed from collaboration");
             window.location.href = "/user/dashboard";
         }
