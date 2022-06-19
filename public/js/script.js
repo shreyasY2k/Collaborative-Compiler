@@ -172,6 +172,11 @@ window.addEventListener("DOMContentLoaded", async(event) => {
             removeLoader()
 
             localStream = stream
+            if (!document.querySelector(".fa-microphone")) {
+                var navBar = document.querySelector("#tutorial")
+
+                navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
+            }
             addVideoStream(myVideo, stream)
             peer.on('call', call => {
                 call.answer(stream)
