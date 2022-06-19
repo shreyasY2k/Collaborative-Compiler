@@ -175,6 +175,8 @@ window.addEventListener("DOMContentLoaded", (event) => {
             video: false,
             audio: true
         })
+        removeLoader()
+
         localStream = stream
         addVideoStream(myVideo, stream)
         peer.on('call', call => {
@@ -182,8 +184,6 @@ window.addEventListener("DOMContentLoaded", (event) => {
             const video = document.createElement('video')
             call.on('stream', userVideoStream => {
                 addVideoStream(video, userVideoStream)
-                removeLoader()
-
             })
         })
 
@@ -798,6 +798,11 @@ window.onbeforeunload = function(e) {
         socket.emit("disconnectusers", {
             projectRoomID: projectRoomID
         });
+    } else {
+        socket.emit("leaveRoom", {
+            projectRoomID: projectRoomID,
+            userID: userID
+        })
     }
 }
 
