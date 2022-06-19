@@ -159,8 +159,8 @@ function deleteFileFromList(fileName) {
 
 window.addEventListener("DOMContentLoaded", async(event) => {
     addLoader();
-    var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-    getUserMedia({
+    // var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+    navigator.mediaDevices.getUserMedia({
         video: false,
         audio: true
     }).then(function(stream) {
