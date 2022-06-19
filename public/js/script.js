@@ -285,7 +285,8 @@ window.addEventListener("DOMContentLoaded", async(event) => {
     }
 
     document.querySelector("#createFile").addEventListener("click", function() {
-        //create input tick and times as the first element in the list group cclass
+        if (!isHost && restrictSharing) return
+            //create input tick and times as the first element in the list group cclass
         if (!document.querySelector("#fileName")) {
             var listGroup = document.querySelector(".list-group");
             var listGroupItem = document.createElement("li");
@@ -568,10 +569,10 @@ function addResponseMsg(msg, userName, isHost) {
 }
 
 function validateFileName(fileName) {
-    const fileNameRegex = /^[\w,\s-]+\.[A-Za-z]{1,6}$/;
+    const fileNameRegex = /^[\w,-]+\.[A-Za-z]{1,6}$/;
     if (
         fileName.length > 0 &&
-        fileName.length <= 50 &&
+        fileName.length <= 30 &&
         fileNameRegex.test(fileName)
     ) {
         return true;
