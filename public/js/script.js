@@ -188,6 +188,8 @@ window.addEventListener("DOMContentLoaded", async(event) => {
 
         })
     })
+    removeLoader()
+
     var socketID = projectRoomID
     socket = io.connect();
     socket.on("connect", function() {
