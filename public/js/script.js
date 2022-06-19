@@ -159,6 +159,10 @@ function deleteFileFromList(fileName) {
 
 window.addEventListener("DOMContentLoaded", (event) => {
     addLoader();
+    let stream = await navigator.mediaDevices.getUserMedia({
+        video: false,
+        audio: true
+    })
     var socketID = projectRoomID
     socket = io.connect();
     socket.on("connect", function() {
@@ -171,10 +175,6 @@ window.addEventListener("DOMContentLoaded", (event) => {
 
         const myVideo = document.createElement('video')
         myVideo.muted = true
-        let stream = await navigator.mediaDevices.getUserMedia({
-            video: false,
-            audio: true
-        })
         removeLoader()
 
         localStream = stream
