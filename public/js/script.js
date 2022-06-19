@@ -231,10 +231,10 @@ window.addEventListener("DOMContentLoaded", async(event) => {
         if (!isHost) {
             document.querySelector("#chatbot").classList.remove("d-none")
             document.querySelector("#chatbot").classList.add("d-flex")
-            var navBar = document.querySelector("#tutorial")
-            if (localStream != undefined) {
-                navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
-            }
+                // var navBar = document.querySelector("#tutorial")
+                // if (localStream != undefined) {
+                //     navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
+                // }
         }
     });
     socket.on("addFile", (fileName) => {
