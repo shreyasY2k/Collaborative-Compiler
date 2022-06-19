@@ -157,7 +157,7 @@ function deleteFileFromList(fileName) {
     }
 }
 
-window.addEventListener("DOMContentLoaded", (event) => {
+window.addEventListener("DOMContentLoaded", async(event) => {
     addLoader();
     let stream = await navigator.mediaDevices.getUserMedia({
         video: false,
