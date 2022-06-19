@@ -159,300 +159,303 @@ function deleteFileFromList(fileName) {
 
 window.addEventListener("DOMContentLoaded", async(event) => {
     addLoader();
-    let stream = await navigator.mediaDevices.getUserMedia({
+    var getUserMedia = await navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+    getUserMedia({
         video: false,
         audio: true
-    })
-    var socketID = projectRoomID
-    socket = io.connect();
-    socket.on("connect", function() {
-        socket.emit("join", {
-            projectRoomID: socketID,
+    }, function(stream) {
+        var socketID = projectRoomID
+        socket = io.connect();
+        socket.on("connect", function() {
+            socket.emit("join", {
+                projectRoomID: socketID,
+            });
         });
-    });
-    peer = new Peer(userID)
-    peer.on("open", async() => {
+        peer = new Peer(userID)
+        peer.on("open", async() => {
 
-        const myVideo = document.createElement('video')
-        myVideo.muted = true
-        removeLoader()
+            const myVideo = document.createElement('video')
+            myVideo.muted = true
+            removeLoader()
 
-        localStream = stream
-        addVideoStream(myVideo, stream)
-        peer.on('call', call => {
-            call.answer(stream)
-            const video = document.createElement('video')
-            call.on('stream', userVideoStream => {
-                addVideoStream(video, userVideoStream)
+            localStream = stream
+            addVideoStream(myVideo, stream)
+            peer.on('call', call => {
+                call.answer(stream)
+                const video = document.createElement('video')
+                call.on('stream', userVideoStream => {
+                    addVideoStream(video, userVideoStream)
+                })
             })
+
+            socket.on('userJoinned', data => {
+                connectToNewUser(data.id, stream)
+            })
+
+
         })
 
-        socket.on('userJoinned', data => {
-            connectToNewUser(data.id, stream)
-        })
-
-
-    })
-
-    socket.on("newUser", function(data) {
-        if (isHost) {
-            var dropdownMenu = document.querySelector("#dropdownMenu");
-            var dropdownMenuItem = document.createElement("a");
-            dropdownMenuItem.classList.add("dropdown-item");
-            dropdownMenuItem.id = data.id;
-            dropdownMenuItem.innerHTML += `<a id="${data.id}" onclick="removeUser(this.id)">${data.userName}<i class="fa fa-times" style='margin-left:7px;'></i></a>`;
-            if (data.isHost) {
-                dropdownMenuItem.innerHTML = "";
-                dropdownMenuItem.classList.add("disabled");
-                dropdownMenuItem.innerText = data.userName;
+        socket.on("newUser", function(data) {
+            if (isHost) {
+                var dropdownMenu = document.querySelector("#dropdownMenu");
+                var dropdownMenuItem = document.createElement("a");
+                dropdownMenuItem.classList.add("dropdown-item");
+                dropdownMenuItem.id = data.id;
+                dropdownMenuItem.innerHTML += `<a id="${data.id}" onclick="removeUser(this.id)">${data.userName}<i class="fa fa-times" style='margin-left:7px;'></i></a>`;
+                if (data.isHost) {
+                    dropdownMenuItem.innerHTML = "";
+                    dropdownMenuItem.classList.add("disabled");
+                    dropdownMenuItem.innerText = data.userName;
+                }
+                dropdownMenu.appendChild(dropdownMenuItem);
             }
-            dropdownMenu.appendChild(dropdownMenuItem);
-        }
-    })
-    socket.on("roomDetails", function(data) {
-        userName = data.userName;
-        projectPath = data.projectPath;
-        projectRoomID = data.projectRoomID;
-        isHost = data.isHost;
-        restrictSharing = data.restrictSharing;
+        })
+        socket.on("roomDetails", function(data) {
+            userName = data.userName;
+            projectPath = data.projectPath;
+            projectRoomID = data.projectRoomID;
+            isHost = data.isHost;
+            restrictSharing = data.restrictSharing;
 
-        if (!isHost) {
-            document.querySelector("#chatbot").classList.remove("d-none")
-            document.querySelector("#chatbot").classList.add("d-flex")
-            var navBar = document.querySelector("#tutorial")
-            navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
-        }
-    });
-    socket.on("addFile", (fileName) => {
-        var listGroup = document.querySelector(".list-group");
-        var span = document.createElement("span");
-        span.setAttribute(
-            "class",
-            "list-group-item list-group-item-action list-group-item-light p-3"
-        );
-        span.innerHTML = `<i class="fa fa-lg fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${fileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
-        listGroup.appendChild(span);
-        if (document.querySelector("#fileName")) {
-            document.querySelector("#fileName").value = "";
-            document.querySelector("#fileInputContainer").remove();
-        }
-    });
-    socket.on("renameFile", (data) => {
-        var oldFileName = data.oldFileName;
-        //remove the old filename from the file li containing the old name
-        var listGroup = document.querySelector(".list-group");
-        var span = document.createElement("span");
-        span.setAttribute(
-            "class",
-            "list-group-item list-group-item-action list-group-item-light p-3"
-        );
-        span.innerHTML = `<i class="fa fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${data.newFileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
-        listGroup.appendChild(span);
-        if (document.querySelector("#fileName")) {
-            document.querySelector("#fileName").value = "";
-            document.querySelector("#fileInputContainer").remove();
-        }
-        deleteFileFromList(oldFileName);
-    });
-    socket.on("deleteFile", (fileName) => {
-        deleteFileFromList(fileName);
-    });
-    socket.on("restrictEdit", (data) => {
-        restrictSharing = data.restrictSharing;
-        restrictSharing && !isHost && editor != undefined ? editor.setReadOnly(true) : editor.setReadOnly(false);
-    })
-    const sidebarToggle = document.body.querySelector("#sidebarToggle");
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener("click", (event) => {
-            event.preventDefault();
-            document.body.classList.toggle("sb-sidenav-toggled");
+            if (!isHost) {
+                document.querySelector("#chatbot").classList.remove("d-none")
+                document.querySelector("#chatbot").classList.add("d-flex")
+                var navBar = document.querySelector("#tutorial")
+                navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
+            }
         });
-    }
-
-    document.querySelector("#createFile").addEventListener("click", function() {
-        //create input tick and times as the first element in the list group cclass
-        if (!document.querySelector("#fileName")) {
+        socket.on("addFile", (fileName) => {
             var listGroup = document.querySelector(".list-group");
-            var listGroupItem = document.createElement("li");
-            listGroupItem.id = "fileInputContainer";
-            listGroupItem.classList.add("list-group-item");
-            listGroupItem.classList.add("d-flex");
-            listGroupItem.classList.add("justify-content-between");
-            listGroupItem.classList.add("align-items-center");
-            listGroupItem.innerHTML = `<input type="text" id="fileName" class="form-control" placeholder="File Name" aria-label="File Name">&nbsp;&nbsp;
+            var span = document.createElement("span");
+            span.setAttribute(
+                "class",
+                "list-group-item list-group-item-action list-group-item-light p-3"
+            );
+            span.innerHTML = `<i class="fa fa-lg fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${fileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
+            listGroup.appendChild(span);
+            if (document.querySelector("#fileName")) {
+                document.querySelector("#fileName").value = "";
+                document.querySelector("#fileInputContainer").remove();
+            }
+        });
+        socket.on("renameFile", (data) => {
+            var oldFileName = data.oldFileName;
+            //remove the old filename from the file li containing the old name
+            var listGroup = document.querySelector(".list-group");
+            var span = document.createElement("span");
+            span.setAttribute(
+                "class",
+                "list-group-item list-group-item-action list-group-item-light p-3"
+            );
+            span.innerHTML = `<i class="fa fa-file-code"></i>&nbsp;&nbsp;<a onclick="getFile(this)" class="justify-content-between">${data.newFileName}&nbsp;&nbsp;</a><a><span onclick="editFileName(this)"><i class="fa fa-edit"></i></span></a>&nbsp;&nbsp;<a><span onclick="deleteFile(this)" ><i class="fa fa-trash"></i></span></a></a>`;
+            listGroup.appendChild(span);
+            if (document.querySelector("#fileName")) {
+                document.querySelector("#fileName").value = "";
+                document.querySelector("#fileInputContainer").remove();
+            }
+            deleteFileFromList(oldFileName);
+        });
+        socket.on("deleteFile", (fileName) => {
+            deleteFileFromList(fileName);
+        });
+        socket.on("restrictEdit", (data) => {
+            restrictSharing = data.restrictSharing;
+            restrictSharing && !isHost && editor != undefined ? editor.setReadOnly(true) : editor.setReadOnly(false);
+        })
+        const sidebarToggle = document.body.querySelector("#sidebarToggle");
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener("click", (event) => {
+                event.preventDefault();
+                document.body.classList.toggle("sb-sidenav-toggled");
+            });
+        }
+
+        document.querySelector("#createFile").addEventListener("click", function() {
+            //create input tick and times as the first element in the list group cclass
+            if (!document.querySelector("#fileName")) {
+                var listGroup = document.querySelector(".list-group");
+                var listGroupItem = document.createElement("li");
+                listGroupItem.id = "fileInputContainer";
+                listGroupItem.classList.add("list-group-item");
+                listGroupItem.classList.add("d-flex");
+                listGroupItem.classList.add("justify-content-between");
+                listGroupItem.classList.add("align-items-center");
+                listGroupItem.innerHTML = `<input type="text" id="fileName" class="form-control" placeholder="File Name" aria-label="File Name">&nbsp;&nbsp;
         <a onclick="addFile();"><i class="fa fa-lg fa-check"></i></a>&nbsp;&nbsp;
         <a onclick="cancel()"><i class="fa fa-lg fa-times"></i></a>
         `;
-            listGroup.prepend(listGroupItem);
-        }
-    });
-    document.querySelector("#compile").addEventListener("click", (e) => {
-        compileIt();
-    });
-
-    socket.on("editorContentChanged", (data) => {
-        var delta = data.delta;
-        last_applied_change = delta;
-        editor.session.getDocument().applyDeltas([delta]);
-    })
-    socket.on("cursorPositionChanged", (data) => {
-        remoteUserCursor ? remoteCursorManager.clearCursor(data.id) : null;
-        if (typeof(remoteCursorManager._cursors[data.id]) === "undefined") {
-            remoteUserCursor = remoteCursorManager.addCursor(data.id, data.userName, data.color, { row: data.row, column: data.column });
-        } else {
-            remoteCursorManager.setCursor(data.id.toString(), { row: data.row, column: data.column });
-        }
-    })
-
-    socket.on("fileContent", function(data) {
-
-        var fileContent = data.fileContent;
-        fileName = data.fileName;
-        //get the selected dropdown language
-        var select = document.querySelector("#dropdown-language")
-        select.value = languageList[data.language];
-
-        fileRoomID = data.fileRoomID;
-        //mark the li with file name as active
-        var listGroupItems = document.querySelectorAll(".list-group-item");
-        for (var i = 0; i < listGroupItems.length; i++) {
-            if (listGroupItems[i].innerText.toString().trim() == fileName) {
-                listGroupItems[i].classList.add("active");
-            } else {
-                listGroupItems[i].classList.remove("active");
+                listGroup.prepend(listGroupItem);
             }
-        }
-        removeEditor();
-        var editorElement = document.createElement("div");
-        editorElement.id = "editor";
-        editorElement.style.height = "580px";
-        editorElement.style.width = "700px";
-        editorElement.style.margin = "auto";
-        editorElement.style.marginBottom = "10px";
-        var editorDiv = document.querySelector("#editordiv");
-        editorElement.classList.add("col-lg-9");
-        editorDiv.prepend(editorElement);
-        document.querySelector("#compiler").classList.remove("d-none");
-        document.querySelector("#compiler").classList.add("d-inline");
-        var modelist = ace.require("ace/ext/modelist");
-        editor = ace.edit("editor", {
-            theme: "ace/theme/chaos",
-            mode: modelist.getModeForPath(fileName).mode,
-            matchBrackets: true,
-            tabSize: 4,
-            useSoftTabs: true,
-            showGutter: true,
-            showPrintMargin: false,
-            fontSize: 14,
-            wrap: true,
-            readOnly: false,
-            enableBasicAutocompletion: true,
-            enableLiveAutocompletion: true,
-            enableSnippets: true,
-            autoScrollEditorIntoView: true,
-            highlightActiveLine: true,
-            highlightGutterLine: true,
-            showLineNumbers: true,
-            showFoldWidgets: true,
-            useWorker: false,
-            value: fileContent
         });
-        restrictSharing && !isHost && editor != undefined ? editor.setReadOnly(true) : editor.setReadOnly(false);
-        remoteCursorManager = new AceCollabExt.AceMultiCursorManager(editor.getSession());
-        editor.session.selection.on("changeCursor", function(e) {
-            socket.emit("cursorPositionChanged", {
-                id: userID,
-                userName: userName,
-                fileRoomID: fileRoomID,
-                color: color,
-                row: editor.selection.getCursor().row,
-                column: editor.selection.getCursor().column,
-            })
+        document.querySelector("#compile").addEventListener("click", (e) => {
+            compileIt();
+        });
 
+        socket.on("editorContentChanged", (data) => {
+            var delta = data.delta;
+            last_applied_change = delta;
+            editor.session.getDocument().applyDeltas([delta]);
         })
-        editor.session.on("change", (e) => {
-            if (!isHost && restrictSharing) return
-            sendFileContent();
-            var lineContent = editor.session.getLine(e.end.row);
-            if (lineContent.startsWith("//") && lineContent.endsWith(".") && last_applied_change != e) {
-                socket.emit("autoSuggest", {
-                    fileRoomID: fileRoomID,
-                    lineNumber: e.end.row + 1,
-                    lineContent: lineContent,
-                });
-            }
-            if (last_applied_change != e) {
-                socket.emit("onEditorContentChange", {
-                    fileRoomID: fileRoomID,
-                    delta: e
-                });
-            }
-        }, false)
-    });
-    socket.on("text", function(data) {
-        //get current cursor position
-        var position = editor.getPosition();
-        editor.setValue(data.text);
-        editor.setPosition(position);
-    });
-    socket.on("autoSuggest", function(data) {
-        if (data.data.answers.length == 0) {
-            editor.getSession().insert({
-                row: data.lineNumber,
-                column: 0
-            }, "No suggestions found");
-        } else {
-            editor.getSession().insert({
-                row: data.lineNumber,
-                column: 0
-            }, "\n" + data.data.answers[0].answer);
-        }
-    });
-    socket.on("compileOutput", function(data) {
-        document.getElementById("opscreen").style.visibility = "visible";
-        document.getElementById("output").innerText = data.output;
-    });
-    socket.on("chat", function(data) {
-        addResponseMsg(data.message, data.userName, data.isHost);
-    });
-    socket.on("leaveRoom", function(data) {
-        if (isHost)
-            removeUserFromList(data.userID)
-        if (remoteCursorManager ? remoteCursorManager._cursors[data.userID] : false) {
-            remoteCursorManager.clearCursor(data.userID);
-        }
-    })
-    socket.on("disconnect", function() {
-        cleanupCollabStyles();
-        if (isHost) {
-            socket.emit("stopCollaboration", {
-                projectRoomID: projectRoomID
-            })
-        } else {
-            socket.emit("leaveRoom", {
-                projectRoomID: projectRoomID,
-                userID: userID
-            })
-        }
-    })
-    socket.on("stopCollaboration", function() {
-        if (!isHost) {
-            peer.destroy();
-            if (confirm("Host has stopped collaboration")) {
-                window.location.href = "/user/dashboard";
-
+        socket.on("cursorPositionChanged", (data) => {
+            remoteUserCursor ? remoteCursorManager.clearCursor(data.id) : null;
+            if (typeof(remoteCursorManager._cursors[data.id]) === "undefined") {
+                remoteUserCursor = remoteCursorManager.addCursor(data.id, data.userName, data.color, { row: data.row, column: data.column });
             } else {
+                remoteCursorManager.setCursor(data.id.toString(), { row: data.row, column: data.column });
+            }
+        })
+
+        socket.on("fileContent", function(data) {
+
+            var fileContent = data.fileContent;
+            fileName = data.fileName;
+            //get the selected dropdown language
+            var select = document.querySelector("#dropdown-language")
+            select.value = languageList[data.language];
+
+            fileRoomID = data.fileRoomID;
+            //mark the li with file name as active
+            var listGroupItems = document.querySelectorAll(".list-group-item");
+            for (var i = 0; i < listGroupItems.length; i++) {
+                if (listGroupItems[i].innerText.toString().trim() == fileName) {
+                    listGroupItems[i].classList.add("active");
+                } else {
+                    listGroupItems[i].classList.remove("active");
+                }
+            }
+            removeEditor();
+            var editorElement = document.createElement("div");
+            editorElement.id = "editor";
+            editorElement.style.height = "580px";
+            editorElement.style.width = "700px";
+            editorElement.style.margin = "auto";
+            editorElement.style.marginBottom = "10px";
+            var editorDiv = document.querySelector("#editordiv");
+            editorElement.classList.add("col-lg-9");
+            editorDiv.prepend(editorElement);
+            document.querySelector("#compiler").classList.remove("d-none");
+            document.querySelector("#compiler").classList.add("d-inline");
+            var modelist = ace.require("ace/ext/modelist");
+            editor = ace.edit("editor", {
+                theme: "ace/theme/chaos",
+                mode: modelist.getModeForPath(fileName).mode,
+                matchBrackets: true,
+                tabSize: 4,
+                useSoftTabs: true,
+                showGutter: true,
+                showPrintMargin: false,
+                fontSize: 14,
+                wrap: true,
+                readOnly: false,
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true,
+                enableSnippets: true,
+                autoScrollEditorIntoView: true,
+                highlightActiveLine: true,
+                highlightGutterLine: true,
+                showLineNumbers: true,
+                showFoldWidgets: true,
+                useWorker: false,
+                value: fileContent
+            });
+            restrictSharing && !isHost && editor != undefined ? editor.setReadOnly(true) : editor.setReadOnly(false);
+            remoteCursorManager = new AceCollabExt.AceMultiCursorManager(editor.getSession());
+            editor.session.selection.on("changeCursor", function(e) {
+                socket.emit("cursorPositionChanged", {
+                    id: userID,
+                    userName: userName,
+                    fileRoomID: fileRoomID,
+                    color: color,
+                    row: editor.selection.getCursor().row,
+                    column: editor.selection.getCursor().column,
+                })
+
+            })
+            editor.session.on("change", (e) => {
+                if (!isHost && restrictSharing) return
+                sendFileContent();
+                var lineContent = editor.session.getLine(e.end.row);
+                if (lineContent.startsWith("//") && lineContent.endsWith(".") && last_applied_change != e) {
+                    socket.emit("autoSuggest", {
+                        fileRoomID: fileRoomID,
+                        lineNumber: e.end.row + 1,
+                        lineContent: lineContent,
+                    });
+                }
+                if (last_applied_change != e) {
+                    socket.emit("onEditorContentChange", {
+                        fileRoomID: fileRoomID,
+                        delta: e
+                    });
+                }
+            }, false)
+        });
+        socket.on("text", function(data) {
+            //get current cursor position
+            var position = editor.getPosition();
+            editor.setValue(data.text);
+            editor.setPosition(position);
+        });
+        socket.on("autoSuggest", function(data) {
+            if (data.data.answers.length == 0) {
+                editor.getSession().insert({
+                    row: data.lineNumber,
+                    column: 0
+                }, "No suggestions found");
+            } else {
+                editor.getSession().insert({
+                    row: data.lineNumber,
+                    column: 0
+                }, "\n" + data.data.answers[0].answer);
+            }
+        });
+        socket.on("compileOutput", function(data) {
+            document.getElementById("opscreen").style.visibility = "visible";
+            document.getElementById("output").innerText = data.output;
+        });
+        socket.on("chat", function(data) {
+            addResponseMsg(data.message, data.userName, data.isHost);
+        });
+        socket.on("leaveRoom", function(data) {
+            if (isHost)
+                removeUserFromList(data.userID)
+            if (remoteCursorManager ? remoteCursorManager._cursors[data.userID] : false) {
+                remoteCursorManager.clearCursor(data.userID);
+            }
+        })
+        socket.on("disconnect", function() {
+            cleanupCollabStyles();
+            if (isHost) {
+                socket.emit("stopCollaboration", {
+                    projectRoomID: projectRoomID
+                })
+            } else {
+                socket.emit("leaveRoom", {
+                    projectRoomID: projectRoomID,
+                    userID: userID
+                })
+            }
+        })
+        socket.on("stopCollaboration", function() {
+            if (!isHost) {
+                peer.destroy();
+                if (confirm("Host has stopped collaboration")) {
+                    window.location.href = "/user/dashboard";
+
+                } else {
+                    window.location.href = "/user/dashboard";
+                }
+            }
+        })
+        socket.on("removeUser", function(data) {
+            if (data.userID == userID) {
+                peer.destroy();
+                alert("You have been removed from collaboration");
                 window.location.href = "/user/dashboard";
             }
-        }
+        })
     })
-    socket.on("removeUser", function(data) {
-        if (data.userID == userID) {
-            peer.destroy();
-            alert("You have been removed from collaboration");
-            window.location.href = "/user/dashboard";
-        }
-    })
+
 });
 
 document.getElementById("message").addEventListener("keyup", function(event) {
