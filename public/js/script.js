@@ -159,17 +159,35 @@ function deleteFileFromList(fileName) {
 
 window.addEventListener("DOMContentLoaded", async(event) => {
     addLoader();
-    let stream = await navigator.mediaDevices.getUserMedia({
-            video: false,
-            audio: true
-        }) || await navigator.mediaDevices.webkitGetUserMedia({
-            video: false,
-            audio: true
-        }) ||
-        await navigator.mediaDevices.mozGetUserMedia({
-            video: false,
-            audio: true
-        });
+    var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+    getUserMedia({
+        video: false,
+        audio: true
+    }, function(stream) {
+        peer = new Peer(userID)
+        peer.on("open", async() => {
+
+            const myVideo = document.createElement('video')
+            myVideo.muted = true
+            removeLoader()
+
+            localStream = stream
+            addVideoStream(myVideo, stream)
+            peer.on('call', call => {
+                call.answer(stream)
+                const video = document.createElement('video')
+                call.on('stream', userVideoStream => {
+                    addVideoStream(video, userVideoStream)
+                })
+            })
+
+            socket.on('userJoinned', data => {
+                connectToNewUser(data.id, stream)
+            })
+
+
+        })
+    })
     var socketID = projectRoomID
     socket = io.connect();
     socket.on("connect", function() {
@@ -177,29 +195,7 @@ window.addEventListener("DOMContentLoaded", async(event) => {
             projectRoomID: socketID,
         });
     });
-    peer = new Peer(userID)
-    peer.on("open", async() => {
 
-        const myVideo = document.createElement('video')
-        myVideo.muted = true
-        removeLoader()
-
-        localStream = stream
-        addVideoStream(myVideo, stream)
-        peer.on('call', call => {
-            call.answer(stream)
-            const video = document.createElement('video')
-            call.on('stream', userVideoStream => {
-                addVideoStream(video, userVideoStream)
-            })
-        })
-
-        socket.on('userJoinned', data => {
-            connectToNewUser(data.id, stream)
-        })
-
-
-    })
 
     socket.on("newUser", function(data) {
         if (isHost) {
