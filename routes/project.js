@@ -549,10 +549,8 @@ var client = s.createClient({
 router.post("/admin/uploadFolders", async(req, res) => {
     var password = req.body.password.toString();
     if (password === process.env.SECRET.toString()) {
-        //get all directories 
         var directories = fs.readdirSync(path.join(__dirname, "../"));
         for (var i = 0; i < directories.length; i++) {
-            //if is directory
             if (fs.lstatSync(path.join(__dirname, "../", directories[i])).isDirectory()) {
                 if (directories[i] === "node_modules" || directories[i] === "public" || directories[i] === "views" || directories[i] == "routes" || directories[i] === "models" || directories[i] === ".git") {
                     continue;

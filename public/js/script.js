@@ -13,6 +13,7 @@ var targetContentManager
 var restrictSharing = false;
 var localStream;
 var last_applied_change = null;
+var users = []
 var color = "#" + Math.floor(Math.random() * 16777215).toString(16);
 const videoGrid = document.getElementById('video-grid')
 
@@ -219,11 +220,7 @@ window.addEventListener("DOMContentLoaded", async(event) => {
                         addVideoStream(video, userVideoStream)
                     })
                 })
-
-                socket.on('userJoinned', data => {
-                    connectToNewUser(data.id, stream)
-                })
-
+                connectToNewUser(users[users.length - 1], stream)
 
             })
         }).catch(function(err) {
@@ -268,6 +265,10 @@ window.addEventListener("DOMContentLoaded", async(event) => {
     socket.on("deleteFile", (fileName) => {
         deleteFileFromList(fileName);
     });
+    socket.on('userJoinned', data => {
+        users.push(data.userID)
+    })
+
     socket.on("restrictEdit", (data) => {
         restrictSharing = data.restrictSharing;
         restrictSharing && !isHost && editor != undefined ? editor.setReadOnly(true) : editor.setReadOnly(false);
