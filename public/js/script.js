@@ -193,10 +193,6 @@ window.addEventListener("DOMContentLoaded", async(event) => {
         if (!isHost) {
             document.querySelector("#chatbot").classList.remove("d-none")
             document.querySelector("#chatbot").classList.add("d-flex")
-                // var navBar = document.querySelector("#tutorial")
-                // if (localStream != undefined) {
-                //     navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
-                // }
         }
         navigator.mediaDevices.getUserMedia({
             video: false,
@@ -465,10 +461,14 @@ window.addEventListener("DOMContentLoaded", async(event) => {
         }
     })
     socket.on("removeUser", function(data) {
+        if (remoteCursorManager ? remoteCursorManager._cursors[data.userID] : false) {
+            remoteCursorManager.clearCursor(data.userID);
+        }
         if (data.userID == userID) {
             if (peer != undefined) {
                 peer.destroy();
             }
+
             alert("You have been removed from collaboration");
             window.location.href = "/user/dashboard";
         }
