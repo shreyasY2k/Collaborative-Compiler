@@ -204,7 +204,7 @@ window.addEventListener("DOMContentLoaded", async(event) => {
         }).then(function(stream) {
             peer = new Peer(userID)
             peer.on("open", async() => {
-
+                console.log("Peer connected");
                 const myVideo = document.createElement('video')
                 myVideo.muted = true
                 removeLoader()
@@ -217,9 +217,11 @@ window.addEventListener("DOMContentLoaded", async(event) => {
 
                 addVideoStream(myVideo, stream)
                 peer.on('call', call => {
+                    console.log("Peer Calling: " + call)
                     call.answer(stream)
                     const video = document.createElement('video')
                     call.on('stream', userVideoStream => {
+                        console.log("Peer stream received: " + userVideoStream);
                         addVideoStream(video, userVideoStream)
                     })
                 })
