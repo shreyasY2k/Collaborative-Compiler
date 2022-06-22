@@ -200,37 +200,34 @@ window.addEventListener("DOMContentLoaded", async(event) => {
             audio: true
         }).then(function(stream) {
             peer = new Peer(userID)
-            localStream = stream
+            peer.on("open", async() => {
+
+                const myVideo = document.createElement('video')
+                myVideo.muted = true
+                if (!document.querySelector(".fa-microphone") && !isHost) {
+                    console.log("here", isHost);
+                    var navBar = document.querySelector("#tutorial")
+                    navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
+                }
+                localStream = stream
+
+                addVideoStream(myVideo, localStream)
+                peer.on('call', call => {
+                    call.answer(localStream)
+                    const video = document.createElement('video')
+                    call.on('stream', userVideoStream => {
+                        addVideoStream(video, userVideoStream)
+                    })
+                })
+                connectToNewUser(users[users.length - 1], stream)
+                removeLoader()
+            })
         }).catch(function(err) {
             removeLoader()
 
         })
     });
-    peer.on("open", async() => {
-
-        const myVideo = document.createElement('video')
-        myVideo.muted = true
-        removeLoader()
-        if (!document.querySelector(".fa-microphone") && !isHost) {
-            console.log("here", isHost);
-            var navBar = document.querySelector("#tutorial")
-            navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
-        }
-        // localStream = stream
-
-        addVideoStream(myVideo, localStream)
-
-        connectToNewUser(users[users.length - 1], localStream)
-
-    })
-    peer.on('call', call => {
-            call.answer(localStream)
-            const video = document.createElement('video')
-            call.on('stream', userVideoStream => {
-                addVideoStream(video, userVideoStream)
-            })
-        })
-        // var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+    // var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
     socket.on("addFile", (fileName) => {
         var listGroup = document.querySelector(".list-group");
