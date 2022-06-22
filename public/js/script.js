@@ -722,12 +722,12 @@ function initializeCollabStyles() {
     roomIDListItem.classList.remove("d-none");
     roomIDListItem.classList.add("d-block");
     roomIDListItem.innerHTML = `<div class="clipboard input-group">
-<input onclick="copy()" class="copy-input form-control" value="${projectRoomID}" id="copyClipboard" readonly>
-<button class="copy-btn" id="copyButton" onclick="copy()"><i class="far fa-copy"></i></button>
-</div>
-<div id="copied-success" class="copied">
-  <span>&nbsp&nbspCopied!&nbsp&nbsp</span>
-</div>`;
+        <input onclick="copy()" class="copy-input form-control" value="${projectRoomID}" id="copyClipboard" readonly>
+        <button class="copy-btn" id="copyButton" onclick="copy()"><i class="far fa-copy"></i></button>
+        </div>
+        <div id="copied-success" class="copied">
+            <span>&nbsp&nbspCopied!&nbsp&nbsp</span>
+        </div>`;
     removeLoader();
 }
 
