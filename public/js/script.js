@@ -13,7 +13,6 @@ var targetContentManager
 var restrictSharing = false;
 var localStream;
 var last_applied_change = null;
-var users = []
 var color = "#" + Math.floor(Math.random() * 16777215).toString(16);
 const videoGrid = document.getElementById('video-grid')
 
@@ -194,6 +193,10 @@ window.addEventListener("DOMContentLoaded", async(event) => {
         if (!isHost) {
             document.querySelector("#chatbot").classList.remove("d-none")
             document.querySelector("#chatbot").classList.add("d-flex")
+                // var navBar = document.querySelector("#tutorial")
+                // if (localStream != undefined) {
+                //     navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
+                // }
         }
         navigator.mediaDevices.getUserMedia({
             video: false,
@@ -220,7 +223,11 @@ window.addEventListener("DOMContentLoaded", async(event) => {
                         addVideoStream(video, userVideoStream)
                     })
                 })
-                connectToNewUser(users[users.length - 1], stream)
+
+                socket.on('userJoinned', data => {
+                    connectToNewUser(data.id, stream)
+                })
+
 
             })
         }).catch(function(err) {
@@ -265,10 +272,6 @@ window.addEventListener("DOMContentLoaded", async(event) => {
     socket.on("deleteFile", (fileName) => {
         deleteFileFromList(fileName);
     });
-    socket.on('userJoinned', data => {
-        users.push(data.userID)
-    })
-
     socket.on("restrictEdit", (data) => {
         restrictSharing = data.restrictSharing;
         restrictSharing && !isHost && editor != undefined ? editor.setReadOnly(true) : editor.setReadOnly(false);
@@ -462,14 +465,10 @@ window.addEventListener("DOMContentLoaded", async(event) => {
         }
     })
     socket.on("removeUser", function(data) {
-        if (remoteCursorManager ? remoteCursorManager._cursors[data.userID] : false) {
-            remoteCursorManager.clearCursor(data.userID);
-        }
         if (data.userID == userID) {
             if (peer != undefined) {
                 peer.destroy();
             }
-
             alert("You have been removed from collaboration");
             window.location.href = "/user/dashboard";
         }
