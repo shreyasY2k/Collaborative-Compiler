@@ -201,23 +201,22 @@ window.addEventListener("DOMContentLoaded", async(event) => {
         }).then(function(stream) {
             peer = new Peer(userID)
             peer.on("open", async() => {
-                console.log("Peer connected");
+
                 const myVideo = document.createElement('video')
                 myVideo.muted = true
+                removeLoader()
                 if (!document.querySelector(".fa-microphone") && !isHost) {
+                    console.log("here", isHost);
                     var navBar = document.querySelector("#tutorial")
                     navBar.insertAdjacentHTML("beforeend", `<button style="margin-left: 10px;" onclick="muteUnmute()" id="mic" class="btn btn-success"><i class="fa fa-microphone"></i></button>`)
                 }
                 localStream = stream
 
-                addVideoStream(myVideo, localStream)
-                removeLoader()
+                addVideoStream(myVideo, stream)
                 peer.on('call', call => {
-                    console.log("user calling", call);
-                    call.answer(localStream)
+                    call.answer(stream)
                     const video = document.createElement('video')
                     call.on('stream', userVideoStream => {
-                        console.log("user streaming", userVideoStream);
                         addVideoStream(video, userVideoStream)
                     })
                 })
@@ -225,6 +224,7 @@ window.addEventListener("DOMContentLoaded", async(event) => {
 
             })
         }).catch(function(err) {
+            console.log(err);
             removeLoader()
 
         })
