@@ -1,7 +1,6 @@
-//Output only to room
-//Socket emit on get file only to requester
-//change emit events to broadcast so that sender doesnot need to wait for response
 const https = require('https');
+const request = require("request")
+
 
 const fileExtLanguage = {
     "c": "C",
@@ -310,9 +309,7 @@ io.on("connection", (socket) => {
         });
     })
 
-    // socket.on("leaveRoom", async(data) => {
-    //     socket.leave(data.projectRoomID);
-    // });
+
     //listen for addFile event
     socket.on("addFile", async(data) => {
         if (!fs.existsSync(path.join(data.projectPath, data.fileName))) {
@@ -460,20 +457,28 @@ io.on("connection", (socket) => {
     })
     socket.on("compile", async(file) => {
         var fileRoomID = file.fileRoomID;
-        await fetch("https://codeorbored.herokuapp.com", {
+        var program = {
+            script: JSON.parse(file.body).code.toString(),
+            language: JSON.parse(file.body).language.toString(),
+            stdin: JSON.parse(file.body).inputs.toString(),
+            versionIndex: "0",
+            clientId: process.env.CLIENT_ID,
+            clientSecret: process.env.CLIENT_SECRET
+        };
+        request({
+                url: "https://api.jdoodle.com/v1/execute",
                 method: "POST",
-                headers: {
-                    "Content-Type": "text/plain",
-                },
-                body: file.body,
-            })
-            .then((response) => {
-                return response.json();
-            })
-            .then((data) => {
-                io.to(fileRoomID).emit("compileOutput", { output: data.output });
-            })
-            .catch((error) => alert(error.message));
+                json: program
+            },
+            function(error, response, body) {
+                console.log(response);
+                if (body.statusCode == 200)
+                    io.to(fileRoomID).emit("compileOutput", { output: body.output });
+                else
+                    io.to(fileRoomID).emit("compileOutput", { output: "Failed!" });
+
+            }
+        );
     });
     socket.on("stopCollaboration", async(data) => {
         socket.broadcast.to(data.projectRoomID).emit("stopCollaboration");

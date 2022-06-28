@@ -658,7 +658,7 @@ function compileIt() {
         body: JSON.stringify({
             code: editor.getValue(),
             language: document.querySelector("#dropdown-language").value,
-            standardIn: document
+            inputs: document
                 .querySelector("#stdin")
                 .value.split(/[|]+/)
                 .join("\n"),
