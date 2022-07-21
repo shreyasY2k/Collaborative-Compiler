@@ -28,7 +28,7 @@ CLIENT_SECRET  | Jdoodle Secret
 * Then run "npm start" or "node server.js" to start the server. 
 * Your app is now deployed locally
 
-# Server Deployment:[Heroku](https://www.heroku.com)
+# Server Deployment : [Heroku](https://www.heroku.com)
 * To deploy on heroku signin to your heroku account. Creat a nodeJS app.
 * Follow further instrictions to deploy your app on heroku.
 
