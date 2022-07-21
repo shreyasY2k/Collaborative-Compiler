@@ -1,14 +1,14 @@
 # Sahapaathi: A Collaborative Code Editor and Compiler
 Online Code Editor and Compiler with Collaboration and A.I.
-> **Prereqisites:**
-* [nodejs](https://www.nodejs.org)
-* [npm](https://www.npmjs.com)
-* [MongoDB Account](https://www.mongodb.com)
-* [AWS account with S3 Bucket](https://aws.amazon.com)
-* [Jdoodle Account](https://www.jdoodle.com)
-* [Heroku Account](https://www.heroku.com)(optional)
+## **Prereqisites:** ##
+> * [nodejs](https://www.nodejs.org)
+> * [npm](https://www.npmjs.com)
+> * [MongoDB Account](https://www.mongodb.com)
+> * [AWS account with S3 Bucket](https://aws.amazon.com)
+> * [Jdoodle Account](https://www.jdoodle.com)
+> * [Heroku Account](https://www.heroku.com)(optional)
 
-# Working
+### Working
 * The client side is built using HTML CSS Vanilla JS. 
 * Clone the repository and navigate to the root directory.
 * Open a terminal. 
@@ -28,7 +28,7 @@ CLIENT_SECRET  | Jdoodle Secret
 * Then run "npm start" or "node server.js" to start the server. 
 * Your app is now deployed locally
 
-# Server Deployment : [Heroku](https://www.heroku.com)
+### Server Deployment : [Heroku](https://www.heroku.com)
 * To deploy on heroku signin to your heroku account. Creat a nodeJS app.
 * Follow further instrictions to deploy your app on heroku.
 
