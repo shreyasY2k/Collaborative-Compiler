@@ -31,5 +31,3 @@ CLIENT_SECRET  | Jdoodle Secret
 ### Server Deployment : [Heroku](https://www.heroku.com)
 * To deploy on heroku signin to your heroku account. Creat a nodeJS app.
 * Follow further instrictions to deploy your app on heroku.
-
-# Live Preview : [click here](https://sahapaathi.live)
